@@ -5,9 +5,84 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, ChevronDown, ChevronUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { allFallenBillionaires, FallenPerson } from "@/data/fallenBillionaires";
 
-type SortField = 'rank' | 'name' | 'formerNetWorth' | 'currentNetWorth' | 'country' | 'industry' | 'wealthLost';
+interface FallenPerson {
+  id: number;
+  rank: number;
+  name: string;
+  formerNetWorth: number;
+  currentNetWorth: number;
+  country: string;
+  industry: string;
+  story: string;
+  yearOfPeak: number;
+  reasonForFall: string;
+}
+
+const mockData: FallenPerson[] = [
+  {
+    id: 1,
+    rank: 1,
+    name: "Elizabeth Holmes",
+    formerNetWorth: 9000000000,
+    currentNetWorth: 0,
+    country: "USA",
+    industry: "Healthcare Tech",
+    story: "Once hailed as the youngest female billionaire, Holmes founded Theranos with promises of revolutionary blood testing technology. Her empire crumbled when investigations revealed the technology never worked as claimed.",
+    yearOfPeak: 2014,
+    reasonForFall: "Fraud conviction, company collapse"
+  },
+  {
+    id: 2,
+    rank: 2,
+    name: "Sean Quinn",
+    formerNetWorth: 6000000000,
+    currentNetWorth: 0,
+    country: "Ireland",
+    industry: "Construction & Insurance",
+    story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
+    yearOfPeak: 2007,
+    reasonForFall: "Financial crisis, bad investments"
+  },
+  {
+    id: 3,
+    rank: 3,
+    name: "Eike Batista",
+    formerNetWorth: 35000000000,
+    currentNetWorth: 0,
+    country: "Brazil",
+    industry: "Mining & Oil",
+    story: "Once Brazil's richest person and among the world's wealthiest, Batista's commodity empire collapsed due to falling prices, debt, and operational failures across his companies.",
+    yearOfPeak: 2012,
+    reasonForFall: "Commodity crash, debt spiral"
+  },
+  {
+    id: 4,
+    rank: 4,
+    name: "Allen Stanford",
+    formerNetWorth: 2200000000,
+    currentNetWorth: 0,
+    country: "USA",
+    industry: "Banking & Finance",
+    story: "Cricket sponsor and financier who ran a $7 billion Ponzi scheme through his Stanford Financial Group. Now serving 110 years in federal prison.",
+    yearOfPeak: 2008,
+    reasonForFall: "Ponzi scheme conviction"
+  },
+  {
+    id: 5,
+    rank: 5,
+    name: "Aubrey McClendon",
+    formerNetWorth: 3000000000,
+    currentNetWorth: 0,
+    country: "USA",
+    industry: "Natural Gas",
+    story: "Natural gas pioneer who helped spark the fracking boom. Aggressive borrowing and falling gas prices led to his companies' collapse. Died in 2016 in a car crash while facing federal charges.",
+    yearOfPeak: 2008,
+    reasonForFall: "Debt crisis, legal troubles"
+  }
+];
+
+type SortField = 'rank' | 'name' | 'formerNetWorth' | 'currentNetWorth' | 'country' | 'industry';
 type SortDirection = 'asc' | 'desc';
 
 export default function FallenList() {
@@ -17,7 +92,7 @@ export default function FallenList() {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = allFallenBillionaires.filter(person =>
+    let filtered = mockData.filter(person =>
       person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       person.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
       person.country.toLowerCase().includes(searchQuery.toLowerCase())
@@ -75,15 +150,12 @@ export default function FallenList() {
       </div>
 
       {/* Table Header */}
-      <div className="hidden md:grid grid-cols-8 gap-4 p-4 bg-card/50 rounded-lg border border-border">
+      <div className="hidden md:grid grid-cols-7 gap-4 p-4 bg-card/50 rounded-lg border border-border">
         <Button variant="ghost" onClick={() => handleSort('rank')} className="justify-start">
           Rank <SortIcon field="rank" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('name')} className="justify-start">
           Name <SortIcon field="name" />
-        </Button>
-        <Button variant="ghost" onClick={() => handleSort('wealthLost')} className="justify-start">
-          Wealth Lost <SortIcon field="wealthLost" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('formerNetWorth')} className="justify-start">
           Former Worth <SortIcon field="formerNetWorth" />
@@ -108,19 +180,18 @@ export default function FallenList() {
           <Card key={person.id} className="overflow-hidden bg-card border-border hover:border-primary/20 transition-colors">
             <CardContent className="p-0">
               {/* Desktop View */}
-              <div className="hidden md:grid grid-cols-8 gap-4 p-4 items-center">
+              <div className="hidden md:grid grid-cols-7 gap-4 p-4 items-center">
                 <div className="flex items-center space-x-3">
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
                   </Badge>
                 </div>
                 <div className="font-medium font-lato">{person.name}</div>
-                <div className="font-medium text-primary flex items-center space-x-1">
-                  <TrendingDown className="w-4 h-4" />
-                  <span>{formatCurrency(person.wealthLost)}</span>
-                </div>
                 <div className="font-medium text-success">{formatCurrency(person.formerNetWorth)}</div>
-                <div className="font-medium text-muted-foreground">{formatCurrency(person.currentNetWorth)}</div>
+                <div className="font-medium text-destructive flex items-center space-x-1">
+                  <TrendingDown className="w-4 h-4" />
+                  <span>{formatCurrency(person.currentNetWorth)}</span>
+                </div>
                 <div className="text-muted-foreground">{person.country}</div>
                 <div className="text-muted-foreground text-sm">{person.industry}</div>
                 <Button
@@ -144,21 +215,17 @@ export default function FallenList() {
                     #{person.rank}
                   </Badge>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Wealth Lost</p>
-                    <p className="font-medium text-primary flex items-center space-x-1">
-                      <TrendingDown className="w-3 h-3" />
-                      <span>{formatCurrency(person.wealthLost)}</span>
-                    </p>
-                  </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Peak Worth</p>
                     <p className="font-medium text-success">{formatCurrency(person.formerNetWorth)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Current Worth</p>
-                    <p className="font-medium text-muted-foreground">{formatCurrency(person.currentNetWorth)}</p>
+                    <p className="font-medium text-destructive flex items-center space-x-1">
+                      <TrendingDown className="w-3 h-3" />
+                      <span>{formatCurrency(person.currentNetWorth)}</span>
+                    </p>
                   </div>
                 </div>
                 <Button

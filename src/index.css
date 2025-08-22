@@ -19,10 +19,10 @@ All colors MUST be HSL.
     --popover: 210 15% 10%;
     --popover-foreground: 0 0% 95%;
 
-    /* Primary colors - Deep blue/steel theme */
-    --primary: 210 45% 35%;
+    /* Primary colors - Deep burgundy/crimson theme */
+    --primary: 0 45% 35%;
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 210 45% 25%;
+    --primary-hover: 0 45% 25%;
 
     /* Secondary - Muted charcoal */
     --secondary: 210 8% 20%;
@@ -32,11 +32,11 @@ All colors MUST be HSL.
     --muted: 210 10% 15%;
     --muted-foreground: 210 5% 60%;
 
-    /* Accent - Subtle blue-gray */
-    --accent: 210 25% 25%;
+    /* Accent - Subtle burgundy */
+    --accent: 0 25% 25%;
     --accent-foreground: 0 0% 95%;
 
-    /* Destructive - Deeper red for negative values (kept for footer/rank) */
+    /* Destructive - Deeper red for negative values */
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 98%;
 
@@ -56,12 +56,12 @@ All colors MUST be HSL.
     --warning-foreground: 0 0% 98%;
 
     /* Gradients for decline theme */
-    --gradient-decline: linear-gradient(135deg, hsl(210 45% 35%), hsl(210 25% 20%));
+    --gradient-decline: linear-gradient(135deg, hsl(0 45% 35%), hsl(0 25% 20%));
     --gradient-subtle: linear-gradient(180deg, hsl(210 15% 12%), hsl(210 11% 8%));
-    --gradient-hero: linear-gradient(135deg, hsl(210 11% 8%) 0%, hsl(210 25% 15%) 50%, hsl(210 11% 8%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(210 11% 8%) 0%, hsl(0 25% 15%) 50%, hsl(210 11% 8%) 100%);
 
     /* Shadows with theme colors */
-    --shadow-elegant: 0 10px 30px -10px hsl(210 45% 15% / 0.3);
+    --shadow-elegant: 0 10px 30px -10px hsl(0 45% 15% / 0.3);
     --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.15);
 
     /* Animations */
