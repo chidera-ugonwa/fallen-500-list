@@ -12,7 +12,7 @@ export default function IntroSection() {
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed font-lato">
             Fortune is fleeting. Power is temporary. Here lies the comprehensive record of 500 individuals who once commanded 
-            billions, shaped industries, and influenced nations—only to lose it all. From tech moguls to real estate tycoons, 
+            billions, shaped industries, and influenced nations— only to fall off. From tech moguls to real estate tycoons, 
             these are the stories of spectacular rises and even more spectacular falls.
           </p>
         </div>
@@ -65,8 +65,8 @@ export default function IntroSection() {
             <h3 className="text-2xl font-bold font-lato mb-4 text-foreground">Our Methodology</h3>
             <p className="text-muted-foreground leading-relaxed font-lato mb-4">
               Each entry is carefully researched and verified. We track individuals who reached a peak net worth 
-              of at least $1 billion and subsequently fell to under $1 million due to various factors including 
-              market crashes, poor investments, legal troubles, or fraudulent activities.
+              of $1 billion and subsequently fell to under $1 billion due to various factors including 
+              market crashes, poor investments, legal troubles, fraudulent activities, and other circumstances.
             </p>
             <p className="text-sm text-muted-foreground italic font-lato">
               "The higher they rise, the harder they fall." - Financial wisdom through the ages

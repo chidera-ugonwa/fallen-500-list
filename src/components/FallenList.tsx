@@ -23,30 +23,6 @@ const mockData: FallenPerson[] = [
   {
     id: 1,
     rank: 1,
-    name: "Elizabeth Holmes",
-    formerNetWorth: 9000000000,
-    currentNetWorth: 0,
-    country: "USA",
-    industry: "Healthcare Tech",
-    story: "Once hailed as the youngest female billionaire, Holmes founded Theranos with promises of revolutionary blood testing technology. Her empire crumbled when investigations revealed the technology never worked as claimed.",
-    yearOfPeak: 2014,
-    reasonForFall: "Fraud conviction, company collapse"
-  },
-  {
-    id: 2,
-    rank: 2,
-    name: "Sean Quinn",
-    formerNetWorth: 6000000000,
-    currentNetWorth: 0,
-    country: "Ireland",
-    industry: "Construction & Insurance",
-    story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
-    yearOfPeak: 2007,
-    reasonForFall: "Financial crisis, bad investments"
-  },
-  {
-    id: 3,
-    rank: 3,
     name: "Eike Batista",
     formerNetWorth: 35000000000,
     currentNetWorth: 0,
@@ -57,20 +33,32 @@ const mockData: FallenPerson[] = [
     reasonForFall: "Commodity crash, debt spiral"
   },
   {
-    id: 4,
-    rank: 4,
-    name: "Allen Stanford",
-    formerNetWorth: 2200000000,
+    id: 2,
+    rank: 2,
+    name: "Elizabeth Holmes",
+    formerNetWorth: 9000000000,
     currentNetWorth: 0,
     country: "USA",
-    industry: "Banking & Finance",
-    story: "Cricket sponsor and financier who ran a $7 billion Ponzi scheme through his Stanford Financial Group. Now serving 110 years in federal prison.",
-    yearOfPeak: 2008,
-    reasonForFall: "Ponzi scheme conviction"
+    industry: "Healthcare Tech",
+    story: "Once hailed as the youngest female billionaire, Holmes founded Theranos with promises of revolutionary blood testing technology. Her empire crumbled when investigations revealed the technology never worked as claimed.",
+    yearOfPeak: 2014,
+    reasonForFall: "Fraud conviction, company collapse"
   },
   {
-    id: 5,
-    rank: 5,
+    id: 3,
+    rank: 3,
+    name: "Sean Quinn",
+    formerNetWorth: 6000000000,
+    currentNetWorth: 0,
+    country: "Ireland",
+    industry: "Construction & Insurance",
+    story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
+    yearOfPeak: 2007,
+    reasonForFall: "Financial crisis, bad investments"
+  },
+  {
+    id: 4,
+    rank: 4,
     name: "Aubrey McClendon",
     formerNetWorth: 3000000000,
     currentNetWorth: 0,
@@ -79,8 +67,21 @@ const mockData: FallenPerson[] = [
     story: "Natural gas pioneer who helped spark the fracking boom. Aggressive borrowing and falling gas prices led to his companies' collapse. Died in 2016 in a car crash while facing federal charges.",
     yearOfPeak: 2008,
     reasonForFall: "Debt crisis, legal troubles"
+  },
+  {
+    id: 5,
+    rank: 5,
+    name: "Allen Stanford",
+    formerNetWorth: 2200000000,
+    currentNetWorth: 0,
+    country: "USA",
+    industry: "Banking & Finance",
+    story: "Cricket sponsor and financier who ran a $7 billion Ponzi scheme through his Stanford Financial Group. Now serving 110 years in federal prison.",
+    yearOfPeak: 2008,
+    reasonForFall: "Ponzi scheme conviction"
   }
-];
+].sort((a, b) => (b.formerNetWorth - b.currentNetWorth) - (a.formerNetWorth - a.currentNetWorth))
+  .map((person, index) => ({ ...person, rank: index + 1 }));
 
 type SortField = 'rank' | 'name' | 'formerNetWorth' | 'currentNetWorth' | 'country' | 'industry';
 type SortDirection = 'asc' | 'desc';
