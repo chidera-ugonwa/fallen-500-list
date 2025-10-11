@@ -189,8 +189,8 @@ export default function FallenList() {
                   </Badge>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${person.name}`} alt={person.name} />
+                  <Avatar className="h-12 w-12 border-2 border-border">
+                    <AvatarImage src={`https://i.pravatar.cc/150?img=${person.id}`} alt={person.name} className="object-cover" />
                     <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="font-medium font-lato">{person.name}</div>
@@ -216,8 +216,8 @@ export default function FallenList() {
               <div className="md:hidden p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center space-x-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${person.name}`} alt={person.name} />
+                    <Avatar className="h-14 w-14 border-2 border-border">
+                      <AvatarImage src={`https://i.pravatar.cc/150?img=${person.id}`} alt={person.name} className="object-cover" />
                       <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div>
