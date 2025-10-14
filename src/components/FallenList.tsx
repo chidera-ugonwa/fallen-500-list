@@ -59,7 +59,7 @@ const mockData: FallenPerson[] = [
     story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
     yearOfPeak: 2007,
     reasonForFall: "Financial crisis, bad investments",
-    imageUrl: "https://ui-avatars.com/api/?name=Sean+Quinn&size=200&background=1e293b&color=fff&bold=true"
+    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Sean_Quinn.jpg/440px-Sean_Quinn.jpg"
   },
   {
     id: 4,
@@ -72,7 +72,7 @@ const mockData: FallenPerson[] = [
     story: "Natural gas pioneer who helped spark the fracking boom. Aggressive borrowing and falling gas prices led to his companies' collapse. Died in 2016 in a car crash while facing federal charges.",
     yearOfPeak: 2008,
     reasonForFall: "Debt crisis, legal troubles",
-    imageUrl: "https://ui-avatars.com/api/?name=Aubrey+McClendon&size=200&background=1e293b&color=fff&bold=true"
+    imageUrl: "https://fortune.com/img-assets/wp-content/uploads/2016/03/gas12_b.jpg"
   },
   {
     id: 5,
@@ -188,13 +188,13 @@ export default function FallenList() {
           <Card key={person.id} className="overflow-hidden bg-card border-border hover:border-primary/20 transition-colors">
             <CardContent className="p-0">
               {/* Desktop View */}
-              <div className="hidden md:grid grid-cols-7 gap-2 p-4 items-center">
-                <div className="flex items-center">
+              <div className="hidden md:grid grid-cols-7 gap-3 p-4 items-center">
+                <div className="flex items-center justify-end pr-2">
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
                   </Badge>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 -ml-2">
                   <Avatar className="h-12 w-12 border-2 border-border">
                     <AvatarImage src={person.imageUrl} alt={person.name} className="object-cover" />
                     <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
