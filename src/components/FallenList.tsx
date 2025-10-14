@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronDown, ChevronUp, TrendingDown } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FallenPerson {
@@ -87,6 +88,7 @@ type SortField = 'rank' | 'name' | 'formerNetWorth' | 'currentNetWorth' | 'count
 type SortDirection = 'asc' | 'desc';
 
 export default function FallenList() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -248,6 +250,13 @@ export default function FallenList() {
                       <Badge variant="destructive">{person.reasonForFall}</Badge>
                     </div>
                     <p className="text-sm leading-relaxed font-lato">{person.story}</p>
+                    <Button 
+                      onClick={() => navigate(`/billionaire/${person.id}`)}
+                      className="mt-4"
+                    >
+                      See More Details
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                   </div>
                 </div>
               )}
