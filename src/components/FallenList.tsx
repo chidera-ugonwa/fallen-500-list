@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, ChevronDown, ChevronUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +17,6 @@ interface FallenPerson {
   story: string;
   yearOfPeak: number;
   reasonForFall: string;
-  imageUrl: string;
 }
 
 const mockData: FallenPerson[] = [
@@ -32,8 +30,7 @@ const mockData: FallenPerson[] = [
     industry: "Mining & Oil",
     story: "Once Brazil's richest person and among the world's wealthiest, Batista's commodity empire collapsed due to falling prices, debt, and operational failures across his companies.",
     yearOfPeak: 2012,
-    reasonForFall: "Commodity crash, debt spiral",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/EIKE_BATISTA.jpg/440px-EIKE_BATISTA.jpg"
+    reasonForFall: "Commodity crash, debt spiral"
   },
   {
     id: 2,
@@ -45,8 +42,7 @@ const mockData: FallenPerson[] = [
     industry: "Healthcare Tech",
     story: "Once hailed as the youngest female billionaire, Holmes founded Theranos with promises of revolutionary blood testing technology. Her empire crumbled when investigations revealed the technology never worked as claimed.",
     yearOfPeak: 2014,
-    reasonForFall: "Fraud conviction, company collapse",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Elizabeth_Holmes_of_Theranos_%2815186113882%29.jpg/440px-Elizabeth_Holmes_of_Theranos_%2815186113882%29.jpg"
+    reasonForFall: "Fraud conviction, company collapse"
   },
   {
     id: 3,
@@ -58,8 +54,7 @@ const mockData: FallenPerson[] = [
     industry: "Construction & Insurance",
     story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
     yearOfPeak: 2007,
-    reasonForFall: "Financial crisis, bad investments",
-    imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop"
+    reasonForFall: "Financial crisis, bad investments"
   },
   {
     id: 4,
@@ -71,8 +66,7 @@ const mockData: FallenPerson[] = [
     industry: "Natural Gas",
     story: "Natural gas pioneer who helped spark the fracking boom. Aggressive borrowing and falling gas prices led to his companies' collapse. Died in 2016 in a car crash while facing federal charges.",
     yearOfPeak: 2008,
-    reasonForFall: "Debt crisis, legal troubles",
-    imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
+    reasonForFall: "Debt crisis, legal troubles"
   },
   {
     id: 5,
@@ -84,8 +78,7 @@ const mockData: FallenPerson[] = [
     industry: "Banking & Finance",
     story: "Cricket sponsor and financier who ran a $7 billion Ponzi scheme through his Stanford Financial Group. Now serving 110 years in federal prison.",
     yearOfPeak: 2008,
-    reasonForFall: "Ponzi scheme conviction",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Allen_Stanford_mug_shot.jpg/440px-Allen_Stanford_mug_shot.jpg"
+    reasonForFall: "Ponzi scheme conviction"
   }
 ].sort((a, b) => (b.formerNetWorth - b.currentNetWorth) - (a.formerNetWorth - a.currentNetWorth))
   .map((person, index) => ({ ...person, rank: index + 1 }));
@@ -158,8 +151,8 @@ export default function FallenList() {
       </div>
 
       {/* Table Header */}
-      <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-3 p-4 bg-card/50 rounded-lg border border-border">
-        <Button variant="ghost" onClick={() => handleSort('rank')} className="justify-start px-2">
+      <div className="hidden md:grid grid-cols-7 gap-4 p-4 bg-card/50 rounded-lg border border-border">
+        <Button variant="ghost" onClick={() => handleSort('rank')} className="justify-start">
           Rank <SortIcon field="rank" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('name')} className="justify-start">
@@ -188,19 +181,13 @@ export default function FallenList() {
           <Card key={person.id} className="overflow-hidden bg-card border-border hover:border-primary/20 transition-colors">
             <CardContent className="p-0">
               {/* Desktop View */}
-              <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-3 p-4 items-center">
-                <div className="flex items-center px-2">
+              <div className="hidden md:grid grid-cols-7 gap-4 p-4 items-center">
+                <div className="flex items-center space-x-3">
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
                   </Badge>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Avatar className="h-12 w-12 border-2 border-border">
-                    <AvatarImage src={person.imageUrl} alt={person.name} className="object-cover" />
-                    <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div className="font-medium font-lato">{person.name}</div>
-                </div>
+                <div className="font-medium font-lato">{person.name}</div>
                 <div className="font-medium text-success">{formatCurrency(person.formerNetWorth)}</div>
                 <div className="font-medium text-destructive flex items-center space-x-1">
                   <TrendingDown className="w-4 h-4" />
@@ -221,15 +208,9 @@ export default function FallenList() {
               {/* Mobile View */}
               <div className="md:hidden p-4 space-y-3">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-14 w-14 border-2 border-border">
-                      <AvatarImage src={person.imageUrl} alt={person.name} className="object-cover" />
-                      <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-medium font-lato">{person.name}</h3>
-                      <p className="text-sm text-muted-foreground">{person.country} • {person.industry}</p>
-                    </div>
+                  <div>
+                    <h3 className="font-medium font-lato">{person.name}</h3>
+                    <p className="text-sm text-muted-foreground">{person.country} • {person.industry}</p>
                   </div>
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
