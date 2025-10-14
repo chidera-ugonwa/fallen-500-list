@@ -59,7 +59,7 @@ const mockData: FallenPerson[] = [
     story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
     yearOfPeak: 2007,
     reasonForFall: "Financial crisis, bad investments",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Sean_Quinn.jpg/440px-Sean_Quinn.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop"
   },
   {
     id: 4,
@@ -72,7 +72,7 @@ const mockData: FallenPerson[] = [
     story: "Natural gas pioneer who helped spark the fracking boom. Aggressive borrowing and falling gas prices led to his companies' collapse. Died in 2016 in a car crash while facing federal charges.",
     yearOfPeak: 2008,
     reasonForFall: "Debt crisis, legal troubles",
-    imageUrl: "https://fortune.com/img-assets/wp-content/uploads/2016/03/gas12_b.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
   },
   {
     id: 5,
@@ -188,13 +188,13 @@ export default function FallenList() {
           <Card key={person.id} className="overflow-hidden bg-card border-border hover:border-primary/20 transition-colors">
             <CardContent className="p-0">
               {/* Desktop View */}
-              <div className="hidden md:grid grid-cols-7 gap-3 p-4 items-center">
-                <div className="flex items-center justify-end pr-2">
+              <div className="hidden md:grid grid-cols-7 gap-4 p-4 items-center">
+                <div className="flex items-center space-x-3">
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
                   </Badge>
                 </div>
-                <div className="flex items-center space-x-3 -ml-2">
+                <div className="flex items-center space-x-3">
                   <Avatar className="h-12 w-12 border-2 border-border">
                     <AvatarImage src={person.imageUrl} alt={person.name} className="object-cover" />
                     <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -220,8 +220,8 @@ export default function FallenList() {
 
               {/* Mobile View */}
               <div className="md:hidden p-4 space-y-3">
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex items-center space-x-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center space-x-3">
                     <Avatar className="h-14 w-14 border-2 border-border">
                       <AvatarImage src={person.imageUrl} alt={person.name} className="object-cover" />
                       <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -231,7 +231,7 @@ export default function FallenList() {
                       <p className="text-sm text-muted-foreground">{person.country} • {person.industry}</p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-destructive border-destructive/20 flex-shrink-0">
+                  <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
                   </Badge>
                 </div>
