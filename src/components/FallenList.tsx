@@ -158,8 +158,8 @@ export default function FallenList() {
       </div>
 
       {/* Table Header */}
-      <div className="hidden md:grid grid-cols-7 gap-4 p-4 bg-card/50 rounded-lg border border-border">
-        <Button variant="ghost" onClick={() => handleSort('rank')} className="justify-start">
+      <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-3 p-4 bg-card/50 rounded-lg border border-border">
+        <Button variant="ghost" onClick={() => handleSort('rank')} className="justify-start px-2">
           Rank <SortIcon field="rank" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('name')} className="justify-start">
@@ -188,8 +188,8 @@ export default function FallenList() {
           <Card key={person.id} className="overflow-hidden bg-card border-border hover:border-primary/20 transition-colors">
             <CardContent className="p-0">
               {/* Desktop View */}
-              <div className="hidden md:grid grid-cols-7 gap-4 p-4 items-center">
-                <div className="flex items-center space-x-3">
+              <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-3 p-4 items-center">
+                <div className="flex items-center px-2">
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
                   </Badge>
