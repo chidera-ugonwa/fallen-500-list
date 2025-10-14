@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, ChevronDown, ChevronUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -187,7 +188,13 @@ export default function FallenList() {
                     #{person.rank}
                   </Badge>
                 </div>
-                <div className="font-medium font-lato">{person.name}</div>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-12 w-12 border-2 border-border">
+                    <AvatarImage src={`https://i.pravatar.cc/150?img=${person.id}`} alt={person.name} className="object-cover" />
+                    <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="font-medium font-lato">{person.name}</div>
+                </div>
                 <div className="font-medium text-success">{formatCurrency(person.formerNetWorth)}</div>
                 <div className="font-medium text-destructive flex items-center space-x-1">
                   <TrendingDown className="w-4 h-4" />
@@ -208,9 +215,15 @@ export default function FallenList() {
               {/* Mobile View */}
               <div className="md:hidden p-4 space-y-3">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium font-lato">{person.name}</h3>
-                    <p className="text-sm text-muted-foreground">{person.country} • {person.industry}</p>
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-14 w-14 border-2 border-border">
+                      <AvatarImage src={`https://i.pravatar.cc/150?img=${person.id}`} alt={person.name} className="object-cover" />
+                      <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-medium font-lato">{person.name}</h3>
+                      <p className="text-sm text-muted-foreground">{person.country} • {person.industry}</p>
+                    </div>
                   </div>
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
