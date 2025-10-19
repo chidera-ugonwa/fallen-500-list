@@ -6,83 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface FallenPerson {
-  id: number;
-  rank: number;
-  name: string;
-  formerNetWorth: number;
-  currentNetWorth: number;
-  country: string;
-  industry: string;
-  story: string;
-  yearOfPeak: number;
-  reasonForFall: string;
-}
-
-const mockData: FallenPerson[] = [
-  {
-    id: 1,
-    rank: 1,
-    name: "Eike Batista",
-    formerNetWorth: 35000000000,
-    currentNetWorth: 0,
-    country: "Brazil",
-    industry: "Mining & Oil",
-    story: "Once Brazil's richest person and among the world's wealthiest, Batista's commodity empire collapsed due to falling prices, debt, and operational failures across his companies.",
-    yearOfPeak: 2012,
-    reasonForFall: "Commodity crash, debt spiral"
-  },
-  {
-    id: 2,
-    rank: 2,
-    name: "Elizabeth Holmes",
-    formerNetWorth: 9000000000,
-    currentNetWorth: 0,
-    country: "USA",
-    industry: "Healthcare Tech",
-    story: "Once hailed as the youngest female billionaire, Holmes founded Theranos with promises of revolutionary blood testing technology. Her empire crumbled when investigations revealed the technology never worked as claimed.",
-    yearOfPeak: 2014,
-    reasonForFall: "Fraud conviction, company collapse"
-  },
-  {
-    id: 3,
-    rank: 3,
-    name: "Sean Quinn",
-    formerNetWorth: 6000000000,
-    currentNetWorth: 0,
-    country: "Ireland",
-    industry: "Construction & Insurance",
-    story: "Ireland's richest man built an empire from cement and insurance. Risky investments in Anglo Irish Bank shares during the 2008 financial crisis led to his spectacular downfall.",
-    yearOfPeak: 2007,
-    reasonForFall: "Financial crisis, bad investments"
-  },
-  {
-    id: 4,
-    rank: 4,
-    name: "Aubrey McClendon",
-    formerNetWorth: 3000000000,
-    currentNetWorth: 0,
-    country: "USA",
-    industry: "Natural Gas",
-    story: "Natural gas pioneer who helped spark the fracking boom. Aggressive borrowing and falling gas prices led to his companies' collapse. Died in 2016 in a car crash while facing federal charges.",
-    yearOfPeak: 2008,
-    reasonForFall: "Debt crisis, legal troubles"
-  },
-  {
-    id: 5,
-    rank: 5,
-    name: "Allen Stanford",
-    formerNetWorth: 2200000000,
-    currentNetWorth: 0,
-    country: "USA",
-    industry: "Banking & Finance",
-    story: "Cricket sponsor and financier who ran a $7 billion Ponzi scheme through his Stanford Financial Group. Now serving 110 years in federal prison.",
-    yearOfPeak: 2008,
-    reasonForFall: "Ponzi scheme conviction"
-  }
-].sort((a, b) => (b.formerNetWorth - b.currentNetWorth) - (a.formerNetWorth - a.currentNetWorth))
-  .map((person, index) => ({ ...person, rank: index + 1 }));
+import { fallenBillionaires, type FallenPerson } from "@/data/fallenBillionaires";
 
 type SortField = 'rank' | 'name' | 'formerNetWorth' | 'currentNetWorth' | 'country' | 'industry';
 type SortDirection = 'asc' | 'desc';
@@ -95,7 +19,7 @@ export default function FallenList() {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = mockData.filter(person =>
+    let filtered = fallenBillionaires.filter(person =>
       person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       person.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
       person.country.toLowerCase().includes(searchQuery.toLowerCase())
