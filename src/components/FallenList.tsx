@@ -4,11 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { fallenBillionaires, type FallenPerson } from "@/data/fallenBillionaires";
+import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight, Loader2 } from "lucide-react";
+import { useFallenBillionaires } from "@/hooks/useFallenBillionaires";
 
-type SortField = 'rank' | 'name' | 'formerNetWorth' | 'currentNetWorth' | 'country' | 'industry';
+type SortField = 'rank' | 'name' | 'peak_net_worth' | 'current_net_worth' | 'country' | 'industry';
 type SortDirection = 'asc' | 'desc';
 
 export default function FallenList() {
@@ -16,13 +15,14 @@ export default function FallenList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const { data: fallenBillionaires, loading, error } = useFallenBillionaires();
 
   const filteredAndSortedData = useMemo(() => {
     let filtered = fallenBillionaires.filter(person =>
       person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      person.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      person.country.toLowerCase().includes(searchQuery.toLowerCase())
+      (person.industry?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (person.country?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     );
 
     return filtered.sort((a, b) => {
@@ -40,7 +40,23 @@ export default function FallenList() {
         return aValue < bValue ? 1 : -1;
       }
     });
-  }, [searchQuery, sortField, sortDirection]);
+  }, [fallenBillionaires, searchQuery, sortField, sortDirection]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        Error loading data: {error.message}
+      </div>
+    );
+  }
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -84,11 +100,11 @@ export default function FallenList() {
         <Button variant="ghost" onClick={() => handleSort('name')} className="justify-start">
           Name <SortIcon field="name" />
         </Button>
-        <Button variant="ghost" onClick={() => handleSort('formerNetWorth')} className="justify-start">
-          Former Worth <SortIcon field="formerNetWorth" />
+        <Button variant="ghost" onClick={() => handleSort('peak_net_worth')} className="justify-start">
+          Former Worth <SortIcon field="peak_net_worth" />
         </Button>
-        <Button variant="ghost" onClick={() => handleSort('currentNetWorth')} className="justify-start">
-          Current Worth <SortIcon field="currentNetWorth" />
+        <Button variant="ghost" onClick={() => handleSort('current_net_worth')} className="justify-start">
+          Current Worth <SortIcon field="current_net_worth" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('country')} className="justify-start">
           Country <SortIcon field="country" />
@@ -114,13 +130,13 @@ export default function FallenList() {
                   </Badge>
                 </div>
                 <div className="font-medium font-lato">{person.name}</div>
-                <div className="font-medium text-success">{formatCurrency(person.formerNetWorth)}</div>
+                <div className="font-medium text-success">{formatCurrency(person.peak_net_worth)}</div>
                 <div className="font-medium text-destructive flex items-center space-x-1">
                   <TrendingDown className="w-4 h-4" />
-                  <span>{formatCurrency(person.currentNetWorth)}</span>
+                  <span>{formatCurrency(person.current_net_worth)}</span>
                 </div>
-                <div className="text-muted-foreground">{person.country}</div>
-                <div className="text-muted-foreground text-sm">{person.industry}</div>
+                <div className="text-muted-foreground">{person.country || 'N/A'}</div>
+                <div className="text-muted-foreground text-sm">{person.industry || 'N/A'}</div>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -136,7 +152,7 @@ export default function FallenList() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium font-lato">{person.name}</h3>
-                    <p className="text-sm text-muted-foreground">{person.country} • {person.industry}</p>
+                    <p className="text-sm text-muted-foreground">{person.country || 'N/A'} • {person.industry || 'N/A'}</p>
                   </div>
                   <Badge variant="outline" className="text-destructive border-destructive/20">
                     #{person.rank}
@@ -145,13 +161,13 @@ export default function FallenList() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Peak Worth</p>
-                    <p className="font-medium text-success">{formatCurrency(person.formerNetWorth)}</p>
+                    <p className="font-medium text-success">{formatCurrency(person.peak_net_worth)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Current Worth</p>
                     <p className="font-medium text-destructive flex items-center space-x-1">
                       <TrendingDown className="w-3 h-3" />
-                      <span>{formatCurrency(person.currentNetWorth)}</span>
+                      <span>{formatCurrency(person.current_net_worth)}</span>
                     </p>
                   </div>
                 </div>
@@ -169,11 +185,7 @@ export default function FallenList() {
               {expandedCard === person.id && (
                 <div className="border-t border-border p-6 bg-muted/20 animate-fade-in">
                   <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">Peak: {person.yearOfPeak}</Badge>
-                      <Badge variant="destructive">{person.reasonForFall}</Badge>
-                    </div>
-                    <p className="text-sm leading-relaxed font-lato">{person.story}</p>
+                    <p className="text-sm leading-relaxed font-lato">{person.summary}</p>
                     <Button 
                       onClick={() => navigate(`/billionaire/${person.id}`)}
                       className="mt-4"
