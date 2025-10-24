@@ -12,6 +12,9 @@ export interface FallenBillionaire {
   summary: string;
   details_html: string | null;
   image_url: string | null;
+  key_factors: string | null;
+  current_status: string | null;
+  lessons_learned: string | null;
   featured: boolean;
   published: boolean;
   created_at: string;

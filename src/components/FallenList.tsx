@@ -67,7 +67,7 @@ export default function FallenList() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number, isPeak: boolean = false) => {
     if (amount === 0) return "$0";
     if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
     if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
@@ -130,7 +130,7 @@ export default function FallenList() {
                   </Badge>
                 </div>
                 <div className="font-medium font-lato">{person.name}</div>
-                <div className="font-medium text-success">{formatCurrency(person.peak_net_worth)}</div>
+                <div className="font-medium text-success">{formatCurrency(person.peak_net_worth, true)}</div>
                 <div className="font-medium text-destructive flex items-center space-x-1">
                   <TrendingDown className="w-4 h-4" />
                   <span>{formatCurrency(person.current_net_worth)}</span>
@@ -161,7 +161,7 @@ export default function FallenList() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Peak Worth</p>
-                    <p className="font-medium text-success">{formatCurrency(person.peak_net_worth)}</p>
+                    <p className="font-medium text-success">{formatCurrency(person.peak_net_worth, true)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Current Worth</p>
