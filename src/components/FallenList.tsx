@@ -101,7 +101,7 @@ export default function FallenList() {
           Name <SortIcon field="name" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('peak_net_worth')} className="justify-start">
-          Former Worth <SortIcon field="peak_net_worth" />
+          Peak Worth <SortIcon field="peak_net_worth" />
         </Button>
         <Button variant="ghost" onClick={() => handleSort('current_net_worth')} className="justify-start">
           Current Worth <SortIcon field="current_net_worth" />
