@@ -20,11 +20,14 @@ export type Database = {
           created_at: string
           created_by: string | null
           current_net_worth: number
+          current_status: string | null
           details_html: string | null
           featured: boolean
           id: string
           image_url: string | null
           industry: string | null
+          key_factors: string | null
+          lessons_learned: string | null
           name: string
           peak_net_worth: number
           published: boolean
@@ -37,11 +40,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_net_worth?: number
+          current_status?: string | null
           details_html?: string | null
           featured?: boolean
           id?: string
           image_url?: string | null
           industry?: string | null
+          key_factors?: string | null
+          lessons_learned?: string | null
           name: string
           peak_net_worth: number
           published?: boolean
@@ -54,11 +60,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_net_worth?: number
+          current_status?: string | null
           details_html?: string | null
           featured?: boolean
           id?: string
           image_url?: string | null
           industry?: string | null
+          key_factors?: string | null
+          lessons_learned?: string | null
           name?: string
           peak_net_worth?: number
           published?: boolean
@@ -164,6 +173,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_rankings: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "editor" | "user"
