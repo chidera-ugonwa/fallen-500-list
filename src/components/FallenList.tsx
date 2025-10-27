@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight, Loader2 } from "lucide-react";
 import { useFallenBillionaires } from "@/hooks/useFallenBillionaires";
+import { formatPeakWorth, formatCurrentWorth } from "@/lib/formatters";
 
 type SortField = 'rank' | 'name' | 'peak_net_worth' | 'current_net_worth' | 'country' | 'industry';
 type SortDirection = 'asc' | 'desc';
@@ -67,11 +68,10 @@ export default function FallenList() {
     }
   };
 
-  const formatCurrency = (amount: number, isPeak: boolean = false) => {
-    if (amount === 0) return "$0";
-    if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    return `$${amount.toLocaleString()}`;
+  const handleNavigateToDetail = (personId: string) => {
+    // Save scroll position before navigating
+    sessionStorage.setItem('fallen500_scroll_position', window.scrollY.toString());
+    navigate(`/billionaire/${personId}`);
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -130,10 +130,10 @@ export default function FallenList() {
                   </Badge>
                 </div>
                 <div className="font-medium font-lato">{person.name}</div>
-                <div className="font-medium text-success">{formatCurrency(person.peak_net_worth, true)}</div>
+                <div className="font-medium text-success">{formatPeakWorth(person.peak_net_worth)}</div>
                 <div className="font-medium text-destructive flex items-center space-x-1">
                   <TrendingDown className="w-4 h-4" />
-                  <span>{formatCurrency(person.current_net_worth)}</span>
+                  <span>{formatCurrentWorth(person.current_net_worth)}</span>
                 </div>
                 <div className="text-muted-foreground">{person.country || 'N/A'}</div>
                 <div className="text-muted-foreground text-sm">{person.industry || 'N/A'}</div>
@@ -161,13 +161,13 @@ export default function FallenList() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Peak Worth</p>
-                    <p className="font-medium text-success">{formatCurrency(person.peak_net_worth, true)}</p>
+                    <p className="font-medium text-success">{formatPeakWorth(person.peak_net_worth)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Current Worth</p>
                     <p className="font-medium text-destructive flex items-center space-x-1">
                       <TrendingDown className="w-3 h-3" />
-                      <span>{formatCurrency(person.current_net_worth)}</span>
+                      <span>{formatCurrentWorth(person.current_net_worth)}</span>
                     </p>
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function FallenList() {
                   <div className="space-y-4">
                     <p className="text-sm leading-relaxed font-lato">{person.summary}</p>
                     <Button 
-                      onClick={() => navigate(`/billionaire/${person.id}`)}
+                      onClick={() => handleNavigateToDetail(person.id)}
                       className="mt-4"
                     >
                       See More Details

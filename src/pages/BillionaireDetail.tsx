@@ -1,17 +1,45 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, TrendingDown, MapPin, Briefcase, Loader2, AlertCircle, BookOpen, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useFallenBillionaires } from "@/hooks/useFallenBillionaires";
+import { formatPeakWorth, formatCurrentWorth } from "@/lib/formatters";
+import SubscribeModal from "@/components/SubscribeModal";
 
 export default function BillionaireDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: fallenBillionaires, loading, error } = useFallenBillionaires();
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
   
   const person = fallenBillionaires.find(p => p.id === id);
+
+  // Show subscribe modal after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSubscribeModal(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('fallen500_scroll_position');
+    if (savedPosition) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPosition, 10));
+      }, 0);
+    }
+  }, []);
+
+  const handleGoBack = () => {
+    navigate("/");
+  };
 
   if (loading) {
     return (
@@ -50,19 +78,15 @@ export default function BillionaireDetail() {
     );
   }
 
-  const formatCurrency = (amount: number) => {
-    if (amount === 0) return "$0";
-    if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    return `$${amount.toLocaleString()}`;
-  };
 
   return (
     <div className="min-h-screen bg-background">
+      <SubscribeModal open={showSubscribeModal} />
+      
       <div className="max-w-5xl mx-auto p-6 md:p-12 space-y-8">
         {/* Header */}
         <div>
-          <Button variant="ghost" onClick={() => navigate("/")} className="mb-6">
+          <Button variant="ghost" onClick={handleGoBack} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to List
           </Button>
@@ -95,7 +119,7 @@ export default function BillionaireDetail() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Peak Net Worth</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-success">{formatCurrency(person.peak_net_worth)}</p>
+                <p className="text-3xl font-bold text-success">{formatPeakWorth(person.peak_net_worth)}</p>
               </CardContent>
             </Card>
             <Card>
@@ -105,7 +129,7 @@ export default function BillionaireDetail() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <TrendingDown className="w-6 h-6 text-destructive" />
-                  <p className="text-3xl font-bold text-destructive">{formatCurrency(person.current_net_worth)}</p>
+                  <p className="text-3xl font-bold text-destructive">{formatCurrentWorth(person.current_net_worth)}</p>
                 </div>
               </CardContent>
             </Card>
