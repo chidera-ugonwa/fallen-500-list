@@ -216,21 +216,6 @@ export default function BillionaireDetail() {
             </CardContent>
           </Card>
         )}
-
-        {/* Full Story / Timeline */}
-        {person.details_html && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Full Story</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div 
-                className="prose prose-sm max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: person.details_html }}
-              />
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
