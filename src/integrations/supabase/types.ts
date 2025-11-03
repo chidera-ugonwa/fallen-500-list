@@ -27,6 +27,7 @@ export type Database = {
           image_url: string | null
           industry: string | null
           key_factors: string | null
+          key_timelines: string | null
           lessons_learned: string | null
           name: string
           peak_net_worth: number
@@ -47,6 +48,7 @@ export type Database = {
           image_url?: string | null
           industry?: string | null
           key_factors?: string | null
+          key_timelines?: string | null
           lessons_learned?: string | null
           name: string
           peak_net_worth: number
@@ -67,6 +69,7 @@ export type Database = {
           image_url?: string | null
           industry?: string | null
           key_factors?: string | null
+          key_timelines?: string | null
           lessons_learned?: string | null
           name?: string
           peak_net_worth?: number

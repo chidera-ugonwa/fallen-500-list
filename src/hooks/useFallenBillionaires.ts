@@ -15,6 +15,7 @@ export interface FallenBillionaire {
   key_factors: string | null;
   current_status: string | null;
   lessons_learned: string | null;
+  key_timelines: string | null;
   featured: boolean;
   published: boolean;
   created_at: string;

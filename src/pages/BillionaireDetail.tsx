@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingDown, MapPin, Briefcase, Loader2, AlertCircle, BookOpen, FileText } from "lucide-react";
+import { ArrowLeft, TrendingDown, MapPin, Briefcase, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useFallenBillionaires } from "@/hooks/useFallenBillionaires";
 import { formatPeakWorth, formatCurrentWorth } from "@/lib/formatters";
@@ -25,6 +25,19 @@ export default function BillionaireDetail() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Disable body scroll when modal is open
+  useEffect(() => {
+    if (showSubscribeModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showSubscribeModal]);
 
   // Restore scroll position on mount
   useEffect(() => {
@@ -140,13 +153,15 @@ export default function BillionaireDetail() {
 
         {/* Image */}
         {person.image_url && (
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <img 
-                src={person.image_url} 
-                alt={person.name}
-                className="w-full h-64 object-cover rounded-t-lg"
-              />
+              <div className="w-full h-64 md:h-96 lg:h-[500px] overflow-hidden">
+                <img 
+                  src={person.image_url} 
+                  alt={person.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -167,16 +182,14 @@ export default function BillionaireDetail() {
         {person.key_factors && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                Key Factors
-              </CardTitle>
+              <CardTitle>Key Factors</CardTitle>
             </CardHeader>
             <CardContent>
-              <div 
-                className="prose prose-sm max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: person.key_factors }}
-              />
+              <ul className="space-y-3 list-disc list-inside text-base leading-relaxed">
+                {person.key_factors.split('\n').filter(line => line.trim()).map((factor, index) => (
+                  <li key={index} className="text-foreground">{factor.replace(/^[-•]\s*/, '')}</li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}
@@ -185,16 +198,14 @@ export default function BillionaireDetail() {
         {person.current_status && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Current Status
-              </CardTitle>
+              <CardTitle>Current Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <div 
-                className="prose prose-sm max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: person.current_status }}
-              />
+              <ul className="space-y-3 list-disc list-inside text-base leading-relaxed">
+                {person.current_status.split('\n').filter(line => line.trim()).map((status, index) => (
+                  <li key={index} className="text-foreground">{status.replace(/^[-•]\s*/, '')}</li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}
@@ -203,16 +214,30 @@ export default function BillionaireDetail() {
         {person.lessons_learned && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Lessons Learned
-              </CardTitle>
+              <CardTitle>Lessons Learned</CardTitle>
             </CardHeader>
             <CardContent>
-              <div 
-                className="prose prose-sm max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: person.lessons_learned }}
-              />
+              <ul className="space-y-3 list-disc list-inside text-base leading-relaxed">
+                {person.lessons_learned.split('\n').filter(line => line.trim()).map((lesson, index) => (
+                  <li key={index} className="text-foreground">{lesson.replace(/^[-•]\s*/, '')}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Key Timelines */}
+        {person.key_timelines && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Key Timelines</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 list-disc list-inside text-base leading-relaxed">
+                {person.key_timelines.split('\n').filter(line => line.trim()).map((timeline, index) => (
+                  <li key={index} className="text-foreground">{timeline.replace(/^[-•]\s*/, '')}</li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}
