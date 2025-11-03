@@ -39,17 +39,6 @@ export default function BillionaireDetail() {
     };
   }, [showSubscribeModal]);
 
-  // Restore scroll position on mount
-  useEffect(() => {
-    const savedPosition = sessionStorage.getItem('fallen500_scroll_position');
-    if (savedPosition) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedPosition, 10));
-      }, 0);
-    }
-  }, []);
-
   const handleGoBack = () => {
     navigate("/");
   };

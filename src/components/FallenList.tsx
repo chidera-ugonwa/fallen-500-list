@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,17 @@ export default function FallenList() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const { data: fallenBillionaires, loading, error } = useFallenBillionaires();
+
+  // Restore scroll position when returning from detail page
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('fallen500_scroll_position');
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPosition, 10));
+        sessionStorage.removeItem('fallen500_scroll_position');
+      }, 100);
+    }
+  }, []);
 
   const filteredAndSortedData = useMemo(() => {
     let filtered = fallenBillionaires.filter(person =>
