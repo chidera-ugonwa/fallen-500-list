@@ -144,11 +144,11 @@ export default function BillionaireDetail() {
         {person.image_url && (
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <div className="w-full h-64 md:h-96 lg:h-[500px] overflow-hidden">
+              <div className="w-full relative">
                 <img 
                   src={person.image_url} 
                   alt={person.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto max-h-[400px] md:max-h-[500px] lg:max-h-[600px] object-contain bg-muted"
                 />
               </div>
             </CardContent>
