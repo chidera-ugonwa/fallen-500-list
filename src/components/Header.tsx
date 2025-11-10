@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
-import { LogOut, UserCog, LogIn } from 'lucide-react';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { LogIn, UserCog } from 'lucide-react';
 
 const Header = () => {
-  const { user, isEditor, signOut } = useAuth();
+  const { user, isEditor } = useAuth();
+
+  const getInitials = () => {
+    if (!user?.email) return "U";
+    return user.email.charAt(0).toUpperCase();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -16,9 +22,6 @@ const Header = () => {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground hidden md:inline">
-                {user.email}
-              </span>
               {isEditor && (
                 <Button variant="outline" asChild>
                   <Link to="/admin">
@@ -27,10 +30,13 @@ const Header = () => {
                   </Link>
                 </Button>
               )}
-              <Button variant="outline" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              <Link to="/profile">
+                <Avatar className="h-9 w-9 cursor-pointer hover:ring-2 hover:ring-destructive transition-all">
+                  <AvatarFallback className="bg-destructive/20 text-destructive">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
             </>
           ) : (
             <Button asChild>

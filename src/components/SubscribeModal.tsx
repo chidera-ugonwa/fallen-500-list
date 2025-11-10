@@ -1,26 +1,64 @@
 import { Button } from "@/components/ui/button";
-import { Crown, X } from "lucide-react";
+import { Crown, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface SubscribeModalProps {
   open: boolean;
+  onClose: () => void;
 }
 
-export default function SubscribeModal({ open }: SubscribeModalProps) {
+export default function SubscribeModal({ open, onClose }: SubscribeModalProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (open) {
-      // Small delay to trigger slide-up animation
       setTimeout(() => setIsVisible(true), 50);
     } else {
       setIsVisible(false);
     }
   }, [open]);
 
-  const handleSubscribe = () => {
-    // Navigate to subscription page or external signup
-    window.location.href = "/auth?mode=signup";
+  const handleSubscribe = async () => {
+    // If not signed in, redirect to auth
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    // If signed in, initiate Paystack payment
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('paystack-initialize', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.authorization_url) {
+        // Redirect to Paystack payment page
+        window.location.href = data.authorization_url;
+      } else {
+        throw new Error('No authorization URL received');
+      }
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+      toast({
+        title: "Payment Error",
+        description: error.message || "Failed to initialize payment. Please try again.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   if (!open) return null;
@@ -61,10 +99,18 @@ export default function SubscribeModal({ open }: SubscribeModalProps) {
             <div className="pt-4">
               <Button 
                 onClick={handleSubscribe}
+                disabled={loading}
                 className="w-full bg-destructive hover:bg-destructive/90 text-white py-6 text-lg"
                 size="lg"
               >
-                Subscribe Now
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  user ? "Continue to Payment" : "Sign In to Subscribe"
+                )}
               </Button>
             </div>
           </div>

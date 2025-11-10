@@ -83,7 +83,7 @@ export default function BillionaireDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SubscribeModal open={showSubscribeModal} />
+      <SubscribeModal open={showSubscribeModal} onClose={() => setShowSubscribeModal(false)} />
       
       <div className="max-w-5xl mx-auto p-6 md:p-12 space-y-8">
         {/* Header */}
