@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      articles: {
+        Row: {
+          author: string
+          content: string
+          created_at: string | null
+          id: string
+          published_date: string | null
+          subtitle: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author: string
+          content: string
+          created_at?: string | null
+          id?: string
+          published_date?: string | null
+          subtitle: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          published_date?: string | null
+          subtitle?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       fallen_billionaires: {
         Row: {
           country: string | null
@@ -83,6 +116,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          display_picture: string | null
           email: string | null
           id: string
           name: string | null
@@ -90,6 +124,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_picture?: string | null
           email?: string | null
           id: string
           name?: string | null
@@ -97,6 +132,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_picture?: string | null
           email?: string | null
           id?: string
           name?: string | null
@@ -106,38 +142,44 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          amount: number | null
           created_at: string
+          currency: string | null
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          payment_provider: string | null
+          payment_reference: string | null
           price_id: string | null
           status: string
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          amount?: number | null
           created_at?: string
+          currency?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
           price_id?: string | null
           status?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          amount?: number | null
           created_at?: string
+          currency?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
           price_id?: string | null
           status?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -169,6 +211,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
