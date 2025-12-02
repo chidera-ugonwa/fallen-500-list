@@ -50,10 +50,18 @@ Deno.serve(async (req) => {
       throw new Error('Profile not found');
     }
 
-    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
+    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')?.trim();
     if (!paystackSecretKey) {
       throw new Error('Paystack secret key not configured');
     }
+
+    // Validate the key format (should start with sk_live_ or sk_test_)
+    if (!paystackSecretKey.startsWith('sk_')) {
+      console.error('Invalid Paystack key format');
+      throw new Error('Invalid Paystack secret key format');
+    }
+
+    console.log('Initializing payment for user:', user.id);
 
     // Initialize Paystack transaction
     // Note: Paystack primarily supports NGN. Amount is in kobo (smallest unit)
