@@ -92,7 +92,7 @@ export default function SubscribeModal({ open, onClose }: SubscribeModalProps) {
               </h2>
               
               <p className="text-center text-lg leading-relaxed text-muted-foreground max-w-lg">
-                Subscribe to Fallen500 for ₦15,000/month to unlock the full story and exclusive insights on the world's fallen billionaires.
+                Subscribe to Fallen500 for $9.99/month to unlock the full story and exclusive insights on the world's fallen billionaires.
               </p>
             </div>
 
