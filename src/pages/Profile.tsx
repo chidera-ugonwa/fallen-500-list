@@ -239,7 +239,7 @@ const Profile = () => {
                   onClick={handleSubscribe}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Subscribe ($9.99/month)
+                  Subscribe (₦15,000/month)
                 </Button>
               ) : (
                 <Button
