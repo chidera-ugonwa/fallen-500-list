@@ -56,6 +56,8 @@ Deno.serve(async (req) => {
     }
 
     // Initialize Paystack transaction
+    // Note: Paystack primarily supports NGN. Amount is in kobo (smallest unit)
+    // ₦15,000 = 1500000 kobo (approximately $9.99 USD)
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -64,8 +66,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         email: profile.email,
-        amount: 999, // $9.99 in cents (Paystack uses kobo/cents)
-        currency: 'USD',
+        amount: 1500000, // ₦15,000 in kobo
+        currency: 'NGN',
         callback_url: `${req.headers.get('origin')}/profile?payment=success`,
         metadata: {
           user_id: user.id,
