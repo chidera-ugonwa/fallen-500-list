@@ -1,4 +1,5 @@
 import { TrendingDown } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export default function Footer() {
   return (
@@ -7,11 +8,10 @@ export default function Footer() {
         {/* Logo */}
         <div className="mb-6">
           <div className="flex items-center justify-center space-x-2 mb-2">
-            <TrendingDown className="w-6 h-6 text-destructive" />
+            <img src={logo} alt="Fallen500" className="h-8 w-8" />
             <span className="text-2xl font-redressed text-foreground">
               Fallen<span className="text-destructive">500</span>
             </span>
-            <TrendingDown className="w-6 h-6 text-destructive" />
           </div>
           <p className="text-sm text-muted-foreground italic font-lato">
             "Fortune's wheel turns for all"
