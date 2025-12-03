@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { LogIn, UserCog } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 const Header = () => {
   const { user, isEditor } = useAuth();
@@ -15,8 +16,9 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="text-2xl font-redressed">
-          Fallen <span className="text-destructive">500</span>
+        <Link to="/" className="flex items-center gap-2 text-2xl font-redressed">
+          <img src={logo} alt="Fallen500" className="h-8 w-8" />
+          <span>Fallen <span className="text-destructive">500</span></span>
         </Link>
         
         <div className="flex items-center gap-4">
