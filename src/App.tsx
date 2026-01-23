@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Articles from "./pages/Articles";
 import ArticleDetail from "./pages/ArticleDetail";
+import PopulateDatabase from "./pages/PopulateDatabase";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/articles" element={<Articles />} />
             <Route path="/articles/:id" element={<ArticleDetail />} />
             <Route path="/billionaire/:id" element={<BillionaireDetail />} />
+            <Route path="/populate-database" element={<PopulateDatabase />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
