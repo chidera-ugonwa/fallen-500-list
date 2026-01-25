@@ -5,22 +5,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { name, rank } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    console.log(`Generating data for: ${name} (rank ${rank})`);
-
-    const prompt = `You are a financial research assistant. Generate detailed information about "${name}" who was once a billionaire but experienced a significant decline in wealth.
+async function callAI(name: string, LOVABLE_API_KEY: string, attempt: number = 1): Promise<string> {
+  const maxAttempts = 3;
+  const cleanName = name.replace(/[&]/g, 'and').trim();
+  
+  const prompt = `You are a financial research assistant. Generate detailed information about "${cleanName}" who was once a billionaire but experienced a significant decline in wealth.
 
 Return a JSON object with these exact fields:
 {
@@ -39,6 +28,10 @@ If you don't have specific information about this person, make reasonable estima
 
 IMPORTANT: Return ONLY the JSON object, no markdown, no explanation.`;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s timeout
+
+  try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -52,20 +45,17 @@ IMPORTANT: Return ONLY the JSON object, no markdown, no explanation.`;
           { role: "user", content: prompt }
         ],
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        throw new Error("RATE_LIMITED");
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required" }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        throw new Error("PAYMENT_REQUIRED");
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
@@ -75,8 +65,64 @@ IMPORTANT: Return ONLY the JSON object, no markdown, no explanation.`;
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
     
-    if (!content) {
-      throw new Error("No content in AI response");
+    if (!content || content.trim() === "") {
+      if (attempt < maxAttempts) {
+        console.log(`Empty AI response for ${name}, retrying (attempt ${attempt + 1}/${maxAttempts})...`);
+        await new Promise(r => setTimeout(r, 2000 * attempt));
+        return callAI(name, LOVABLE_API_KEY, attempt + 1);
+      }
+      throw new Error("No content in AI response after retries");
+    }
+
+    return content;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === "AbortError" || error.message?.includes("network") || error.message?.includes("connection")) {
+      if (attempt < maxAttempts) {
+        console.log(`Network error for ${name}, retrying (attempt ${attempt + 1}/${maxAttempts})...`);
+        await new Promise(r => setTimeout(r, 3000 * attempt));
+        return callAI(name, LOVABLE_API_KEY, attempt + 1);
+      }
+      throw new Error("Network connection failed after retries");
+    }
+    
+    throw error;
+  }
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { name, rank } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    console.log(`Generating data for: ${name} (rank ${rank})`);
+
+    let content: string;
+    try {
+      content = await callAI(name, LOVABLE_API_KEY);
+    } catch (error) {
+      if (error.message === "RATE_LIMITED") {
+        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (error.message === "PAYMENT_REQUIRED") {
+        return new Response(JSON.stringify({ error: "Payment required" }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw error;
     }
 
     // Parse the JSON from the response
