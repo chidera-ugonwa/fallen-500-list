@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Database } from 'lucide-react';
 
 const Admin = () => {
   const { user, isEditor, loading: authLoading } = useAuth();
@@ -97,10 +97,14 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4 flex-wrap">
           <Button variant="outline" onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
+          </Button>
+          <Button variant="default" onClick={() => navigate('/populate-database')}>
+            <Database className="h-4 w-4 mr-2" />
+            Bulk Population Tool
           </Button>
           <h1 className="text-3xl font-redressed">Admin Panel</h1>
         </div>
