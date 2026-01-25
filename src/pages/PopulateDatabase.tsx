@@ -143,9 +143,11 @@ export default function PopulateDatabase() {
     addLog('Database cleared successfully');
   };
 
-  const processName = async (name: string, rank: number): Promise<boolean> => {
+  const processName = async (name: string, rank: number, retryCount = 0): Promise<boolean> => {
+    const maxRetries = 3;
+    
     try {
-      addLog(`Processing ${rank}/${billionaireNames.length}: ${name}`);
+      addLog(`Processing ${rank}/${billionaireNames.length}: ${name}${retryCount > 0 ? ` (retry ${retryCount})` : ''}`);
       
       const response = await supabase.functions.invoke('generate-billionaire-data', {
         body: { name, rank }
@@ -158,6 +160,10 @@ export default function PopulateDatabase() {
       const data = response.data;
       
       if (data.error) {
+        // Check if it's a rate limit error
+        if (data.error.includes('Rate limited') || data.error.includes('429')) {
+          throw new Error('RATE_LIMITED');
+        }
         throw new Error(data.error);
       }
 
@@ -185,16 +191,20 @@ export default function PopulateDatabase() {
       addLog(`✓ Added: ${name} (Peak: $${data.peak_net_worth}B)`);
       return true;
     } catch (error: any) {
+      const isRateLimited = error.message === 'RATE_LIMITED' || 
+                           error.message.includes('429') || 
+                           error.message.includes('rate');
+      
+      if (isRateLimited && retryCount < maxRetries) {
+        const waitTime = Math.pow(2, retryCount + 1) * 15000; // 30s, 60s, 120s
+        addLog(`⏳ Rate limited, waiting ${waitTime / 1000}s before retry...`);
+        await delay(waitTime);
+        return processName(name, rank, retryCount + 1);
+      }
+      
       const errorMsg = `✗ Failed: ${name} - ${error.message}`;
       addLog(errorMsg);
       setErrors(prev => [...prev, errorMsg]);
-      
-      // If rate limited, wait longer
-      if (error.message.includes('429') || error.message.includes('rate')) {
-        addLog('Rate limited, waiting 30 seconds...');
-        await delay(30000);
-      }
-      
       return false;
     }
   };
@@ -225,8 +235,8 @@ export default function PopulateDatabase() {
         setProcessed(i + 1);
         setProgress(((i + 1) / billionaireNames.length) * 100);
         
-        // Add delay between requests to avoid rate limiting
-        await delay(2000);
+        // Add longer delay between requests to avoid rate limiting (5 seconds)
+        await delay(5000);
       }
       
       addLog('Population complete!');
