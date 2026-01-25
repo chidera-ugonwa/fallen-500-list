@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, FastForward } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // The 500 billionaire names extracted from the document
@@ -363,8 +363,8 @@ export default function PopulateDatabase() {
         setProcessed(i + 1);
         setProgress(((i + 1) / billionaireNames.length) * 100);
         
-        // Add delay between requests to help avoid rate limiting
-        await delay(10000);
+        // Add delay between requests to help avoid rate limiting (15 seconds)
+        await delay(15000);
       }
       
       addLog('Population complete!');
@@ -378,6 +378,107 @@ export default function PopulateDatabase() {
         title: "Error",
         description: error.message,
         variant: "destructive",
+      });
+    } finally {
+      isProcessingRef.current = false;
+      releaseLock();
+      setIsRunning(false);
+    }
+  };
+
+  // Resume population - skip already inserted entries
+  const resumePopulation = async () => {
+    if (isProcessingRef.current) {
+      addLog('A population run is already active.');
+      return;
+    }
+
+    if (hasExternalLock) {
+      addLog('Another tab/window is already running.');
+      toast({
+        title: 'Another run detected',
+        description: 'Only one population job can run at a time.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!acquireLock()) {
+      syncExternalLockState();
+      addLog('Could not start: another tab/window appears to be running.');
+      return;
+    }
+
+    isProcessingRef.current = true;
+    setIsRunning(true);
+    isPausedRef.current = false;
+    setErrors([]);
+
+    try {
+      addLog('Checking existing entries...');
+      
+      // Get all existing names from the database
+      const { data: existingEntries, error: fetchError } = await supabase
+        .from('fallen_billionaires')
+        .select('name');
+      
+      if (fetchError) {
+        throw new Error(`Failed to fetch existing entries: ${fetchError.message}`);
+      }
+
+      const existingNames = new Set((existingEntries ?? []).map(e => e.name.toUpperCase()));
+      addLog(`Found ${existingNames.size} existing entries. Resuming from where we left off...`);
+
+      let skipped = 0;
+      let processed = 0;
+
+      for (let i = 0; i < billionaireNames.length; i++) {
+        if (isPausedRef.current) {
+          addLog('Process paused by user');
+          break;
+        }
+
+        const name = billionaireNames[i];
+        
+        // Skip if already exists
+        if (existingNames.has(name.toUpperCase())) {
+          skipped++;
+          continue;
+        }
+
+        setCurrentName(name);
+        addLog(`Processing ${i + 1}/${billionaireNames.length}: ${name} (skipped ${skipped})`);
+
+        const success = await processName(name, i + 1);
+
+        if (isPausedRef.current) {
+          addLog('Run paused.');
+          break;
+        }
+
+        if (success) {
+          processed++;
+          existingNames.add(name.toUpperCase());
+        }
+
+        setProcessed(existingNames.size);
+        setProgress((existingNames.size / billionaireNames.length) * 100);
+
+        // Add delay between requests (15 seconds)
+        await delay(15000);
+      }
+
+      addLog(`Resume complete! Added ${processed} new entries (${skipped} already existed).`);
+      toast({
+        title: 'Resume Complete',
+        description: `Added ${processed} new entries`,
+      });
+    } catch (error: any) {
+      addLog(`Fatal error: ${error.message}`);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
       });
     } finally {
       isProcessingRef.current = false;
@@ -419,12 +520,18 @@ export default function PopulateDatabase() {
               Another tab/window is currently running a population job. Close it or wait for it to finish.
             </div>
           )}
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             {!isRunning ? (
-              <Button onClick={startPopulation} className="gap-2" disabled={hasExternalLock}>
-                <Play className="h-4 w-4" />
-                Start Population
-              </Button>
+              <>
+                <Button onClick={startPopulation} className="gap-2" disabled={hasExternalLock}>
+                  <Play className="h-4 w-4" />
+                  Start Fresh
+                </Button>
+                <Button onClick={resumePopulation} variant="secondary" className="gap-2" disabled={hasExternalLock}>
+                  <FastForward className="h-4 w-4" />
+                  Resume (Skip Existing)
+                </Button>
+              </>
             ) : (
               <Button onClick={pausePopulation} variant="outline" className="gap-2">
                 <Pause className="h-4 w-4" />
