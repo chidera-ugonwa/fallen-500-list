@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -123,6 +123,68 @@ export default function PopulateDatabase() {
   const [logs, setLogs] = useState<string[]>([]);
   const isPausedRef = useRef(false);
   const isProcessingRef = useRef(false);
+  const [hasExternalLock, setHasExternalLock] = useState(false);
+
+  // Prevent multiple tabs/windows from running the population simultaneously (which quickly triggers 429s)
+  const lockKey = 'fallen500_population_lock_v1';
+  const lockIdRef = useRef(`lock_${Math.random().toString(36).slice(2)}`);
+
+  const readLock = (): { id: string; ts: number } | null => {
+    const raw = localStorage.getItem(lockKey);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
+
+  const isLockStale = (lock: { id: string; ts: number }) => Date.now() - lock.ts > 15 * 60_000; // 15 min
+
+  const refreshOwnLock = () => {
+    localStorage.setItem(lockKey, JSON.stringify({ id: lockIdRef.current, ts: Date.now() }));
+  };
+
+  const acquireLock = () => {
+    const lock = readLock();
+    if (lock && !isLockStale(lock) && lock.id !== lockIdRef.current) return false;
+    refreshOwnLock();
+    setHasExternalLock(false);
+    return true;
+  };
+
+  const releaseLock = () => {
+    const lock = readLock();
+    if (lock?.id === lockIdRef.current) {
+      localStorage.removeItem(lockKey);
+    }
+    setHasExternalLock(false);
+  };
+
+  const syncExternalLockState = () => {
+    const lock = readLock();
+    if (!lock) {
+      setHasExternalLock(false);
+      return;
+    }
+    if (isLockStale(lock)) {
+      // Clean up stale lock
+      localStorage.removeItem(lockKey);
+      setHasExternalLock(false);
+      return;
+    }
+    setHasExternalLock(lock.id !== lockIdRef.current);
+  };
+
+  useEffect(() => {
+    syncExternalLockState();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === lockKey) syncExternalLockState();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (authLoading) return <div className="p-8">Loading...</div>;
   if (!user || !isEditor) return <Navigate to="/auth" replace />;
@@ -145,80 +207,128 @@ export default function PopulateDatabase() {
   };
 
   const processName = async (name: string, rank: number, retryCount = 0): Promise<boolean> => {
-    const maxRetries = 3;
-    
+    const maxRetries = 8;
+
+    // Keep the lock fresh while running
+    if (isProcessingRef.current) refreshOwnLock();
+
+    addLog(`Processing ${rank}/${billionaireNames.length}: ${name}${retryCount > 0 ? ` (retry ${retryCount})` : ''}`);
+
+    let invokeResult:
+      | { data: any; error: { message?: string } | null }
+      | undefined;
+
     try {
-      addLog(`Processing ${rank}/${billionaireNames.length}: ${name}${retryCount > 0 ? ` (retry ${retryCount})` : ''}`);
-      
-      const response = await supabase.functions.invoke('generate-billionaire-data', {
-        body: { name, rank }
+      invokeResult = await supabase.functions.invoke('generate-billionaire-data', {
+        body: { name, rank },
       });
+    } catch (e: any) {
+      // Some errors may be thrown directly; normalize into a message
+      invokeResult = { data: null, error: { message: e?.message ?? 'Unknown error' } };
+    }
 
-      if (response.error) {
-        const msg = response.error.message ?? 'Unknown error';
-        // supabase.functions.invoke returns non-2xx (like 429) as response.error
-        if (msg.includes('429') || msg.toLowerCase().includes('rate')) {
-          throw new Error('RATE_LIMITED');
-        }
-        throw new Error(msg);
-      }
+    const invokeErrorMsg = invokeResult?.error?.message ?? '';
+    const isRateLimited = invokeErrorMsg.includes('429') || invokeErrorMsg.toLowerCase().includes('rate limited');
 
-      const data = response.data;
-      
-      if (data.error) {
-        // Check if it's a rate limit error
-        if (data.error.includes('Rate limited') || data.error.includes('429')) {
-          throw new Error('RATE_LIMITED');
-        }
-        throw new Error(data.error);
-      }
-
-      // Insert into database
-      const { error: insertError } = await supabase.from('fallen_billionaires').insert({
-        name: data.name,
-        rank: data.rank,
-        peak_net_worth: data.peak_net_worth,
-        current_net_worth: data.current_net_worth,
-        country: data.country,
-        industry: data.industry,
-        summary: data.summary,
-        key_factors: data.key_factors,
-        key_timelines: data.key_timelines,
-        current_status: data.current_status,
-        lessons_learned: data.lessons_learned,
-        featured: data.featured,
-        published: data.published,
-      });
-
-      if (insertError) {
-        throw new Error(`Insert failed: ${insertError.message}`);
-      }
-
-      addLog(`✓ Added: ${name} (Peak: $${data.peak_net_worth}B)`);
-      return true;
-    } catch (error: any) {
-      const isRateLimited = error.message === 'RATE_LIMITED' || 
-                           error.message.includes('429') || 
-                           error.message.toLowerCase().includes('rate');
-      
+    if (invokeResult?.error) {
       if (isRateLimited && retryCount < maxRetries) {
-        const waitTime = Math.pow(2, retryCount + 1) * 15000; // 30s, 60s, 120s
-        addLog(`⏳ Rate limited, waiting ${waitTime / 1000}s before retry...`);
+        // Exponential backoff with a cap (up to 10 minutes)
+        const waitTime = Math.min(10 * 60_000, Math.pow(2, retryCount + 1) * 30_000);
+        addLog(`⏳ Rate limited, waiting ${Math.round(waitTime / 1000)}s before retry...`);
         await delay(waitTime);
         return processName(name, rank, retryCount + 1);
       }
-      
-      const errorMsg = `✗ Failed: ${name} - ${error.message}`;
+
+      if (isRateLimited) {
+        // If we're still rate-limited after retries, stop cleanly instead of spamming requests.
+        addLog('⛔ Still rate limited after multiple retries. Pausing the run.');
+        toast({
+          title: 'Rate limited',
+          description: 'Please wait a few minutes and click Start again to continue.',
+          variant: 'destructive',
+        });
+        isPausedRef.current = true;
+        setIsRunning(false);
+        return false;
+      }
+
+      const errorMsg = `✗ Failed: ${name} - ${invokeErrorMsg || 'Unknown error'}`;
       addLog(errorMsg);
       setErrors(prev => [...prev, errorMsg]);
       return false;
     }
+
+    const data = invokeResult?.data;
+    if (!data) {
+      const errorMsg = `✗ Failed: ${name} - No data returned`;
+      addLog(errorMsg);
+      setErrors(prev => [...prev, errorMsg]);
+      return false;
+    }
+
+    if (data.error) {
+      const msg = String(data.error);
+      const dataRateLimited = msg.includes('429') || msg.toLowerCase().includes('rate limited');
+      if (dataRateLimited && retryCount < maxRetries) {
+        const waitTime = Math.min(10 * 60_000, Math.pow(2, retryCount + 1) * 30_000);
+        addLog(`⏳ Rate limited, waiting ${Math.round(waitTime / 1000)}s before retry...`);
+        await delay(waitTime);
+        return processName(name, rank, retryCount + 1);
+      }
+      const errorMsg = `✗ Failed: ${name} - ${msg}`;
+      addLog(errorMsg);
+      setErrors(prev => [...prev, errorMsg]);
+      return false;
+    }
+
+    // Insert into database
+    const { error: insertError } = await supabase.from('fallen_billionaires').insert({
+      name: data.name,
+      rank: data.rank,
+      peak_net_worth: data.peak_net_worth,
+      current_net_worth: data.current_net_worth,
+      country: data.country,
+      industry: data.industry,
+      summary: data.summary,
+      key_factors: data.key_factors,
+      key_timelines: data.key_timelines,
+      current_status: data.current_status,
+      lessons_learned: data.lessons_learned,
+      featured: data.featured,
+      published: data.published,
+    });
+
+    if (insertError) {
+      const errorMsg = `✗ Failed: ${name} - Insert failed: ${insertError.message}`;
+      addLog(errorMsg);
+      setErrors(prev => [...prev, errorMsg]);
+      return false;
+    }
+
+    addLog(`✓ Added: ${name} (Peak: $${data.peak_net_worth}B)`);
+    return true;
   };
 
   const startPopulation = async () => {
     // Prevent double-clicks / multiple concurrent runs
     if (isProcessingRef.current) {
       addLog('A population run is already active. Please wait for it to finish.');
+      return;
+    }
+
+    if (hasExternalLock) {
+      addLog('Another tab/window is already running a population job. Close it or wait for it to finish.');
+      toast({
+        title: 'Another run detected',
+        description: 'Only one population job can run at a time.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!acquireLock()) {
+      syncExternalLockState();
+      addLog('Could not start: another tab/window appears to be running this already.');
       return;
     }
 
@@ -244,11 +354,16 @@ export default function PopulateDatabase() {
         setCurrentName(name);
         
         await processName(name, i + 1);
+
+        if (isPausedRef.current) {
+          addLog('Run paused.');
+          break;
+        }
         
         setProcessed(i + 1);
         setProgress(((i + 1) / billionaireNames.length) * 100);
         
-        // Add longer delay between requests to avoid rate limiting (10 seconds)
+        // Add delay between requests to help avoid rate limiting
         await delay(10000);
       }
       
@@ -266,6 +381,7 @@ export default function PopulateDatabase() {
       });
     } finally {
       isProcessingRef.current = false;
+      releaseLock();
       setIsRunning(false);
     }
   };
@@ -283,6 +399,7 @@ export default function PopulateDatabase() {
     setErrors([]);
     setLogs([]);
     isPausedRef.current = false;
+    releaseLock();
   };
 
   return (
@@ -297,9 +414,14 @@ export default function PopulateDatabase() {
           <CardTitle>Populate 500 Billionaires Database</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {hasExternalLock && (
+            <div className="text-sm text-muted-foreground">
+              Another tab/window is currently running a population job. Close it or wait for it to finish.
+            </div>
+          )}
           <div className="flex gap-4">
             {!isRunning ? (
-              <Button onClick={startPopulation} className="gap-2">
+              <Button onClick={startPopulation} className="gap-2" disabled={hasExternalLock}>
                 <Play className="h-4 w-4" />
                 Start Population
               </Button>
