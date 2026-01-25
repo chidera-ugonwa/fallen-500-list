@@ -122,6 +122,7 @@ export default function PopulateDatabase() {
   const [errors, setErrors] = useState<string[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
   const isPausedRef = useRef(false);
+  const isProcessingRef = useRef(false);
 
   if (authLoading) return <div className="p-8">Loading...</div>;
   if (!user || !isEditor) return <Navigate to="/auth" replace />;
@@ -154,7 +155,12 @@ export default function PopulateDatabase() {
       });
 
       if (response.error) {
-        throw new Error(response.error.message);
+        const msg = response.error.message ?? 'Unknown error';
+        // supabase.functions.invoke returns non-2xx (like 429) as response.error
+        if (msg.includes('429') || msg.toLowerCase().includes('rate')) {
+          throw new Error('RATE_LIMITED');
+        }
+        throw new Error(msg);
       }
 
       const data = response.data;
@@ -193,7 +199,7 @@ export default function PopulateDatabase() {
     } catch (error: any) {
       const isRateLimited = error.message === 'RATE_LIMITED' || 
                            error.message.includes('429') || 
-                           error.message.includes('rate');
+                           error.message.toLowerCase().includes('rate');
       
       if (isRateLimited && retryCount < maxRetries) {
         const waitTime = Math.pow(2, retryCount + 1) * 15000; // 30s, 60s, 120s
@@ -210,6 +216,13 @@ export default function PopulateDatabase() {
   };
 
   const startPopulation = async () => {
+    // Prevent double-clicks / multiple concurrent runs
+    if (isProcessingRef.current) {
+      addLog('A population run is already active. Please wait for it to finish.');
+      return;
+    }
+
+    isProcessingRef.current = true;
     setIsRunning(true);
     isPausedRef.current = false;
     setErrors([]);
@@ -235,8 +248,8 @@ export default function PopulateDatabase() {
         setProcessed(i + 1);
         setProgress(((i + 1) / billionaireNames.length) * 100);
         
-        // Add longer delay between requests to avoid rate limiting (5 seconds)
-        await delay(5000);
+        // Add longer delay between requests to avoid rate limiting (10 seconds)
+        await delay(10000);
       }
       
       addLog('Population complete!');
@@ -252,6 +265,7 @@ export default function PopulateDatabase() {
         variant: "destructive",
       });
     } finally {
+      isProcessingRef.current = false;
       setIsRunning(false);
     }
   };
