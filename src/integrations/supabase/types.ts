@@ -220,6 +220,7 @@ export type Database = {
         Returns: boolean
       }
       recalculate_rankings: { Args: never; Returns: undefined }
+      to_title_case: { Args: { input_text: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "editor" | "user"
