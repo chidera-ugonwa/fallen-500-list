@@ -68,6 +68,7 @@ export type Database = {
           rank: number
           summary: string
           updated_at: string
+          wealth_lost: number | null
         }
         Insert: {
           country?: string | null
@@ -89,6 +90,7 @@ export type Database = {
           rank: number
           summary: string
           updated_at?: string
+          wealth_lost?: number | null
         }
         Update: {
           country?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           rank?: number
           summary?: string
           updated_at?: string
+          wealth_lost?: number | null
         }
         Relationships: []
       }
