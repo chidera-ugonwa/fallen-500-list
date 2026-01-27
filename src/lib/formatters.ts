@@ -11,25 +11,25 @@ export const formatPeakWorth = (amount: number): string => {
 };
 
 /**
- * Formats current net worth values
- * Data is stored in BILLIONS (e.g., 0.5 = $500M, 2.63 = $2.6B)
- * Displays in appropriate unit: B for billions, M for millions, K for thousands
- * @param amount - Amount in billions (e.g., 0.5 means $500M, 2.63 means $2.63B)
- * @returns Formatted string with appropriate suffix (e.g., "$500M", "$2.6B", "$50K")
+ * Formats current net worth values with "M" suffix
+ * Data is stored in billions (e.g., 0.7 = $700M)
+ * Always displays in millions with capital M
+ * @param amount - Amount in billions (e.g., 0.7 means $700M)
+ * @returns Formatted string with M suffix (e.g., "$700M", "$50M")
  */
 export const formatCurrentWorth = (amount: number): string => {
   if (amount === 0) return "$0";
   if (amount < 0) return "$0"; // Handle negative values as $0
   
-  // Convert to millions for easier calculation
+  // Convert billions to millions for display
   const millions = amount * 1000;
   
-  // If >= 1000 million = 1+ billion, show as B
+  // If it's a whole billion or more, show as B
   if (millions >= 1000) {
     return `$${(millions / 1000).toFixed(1)}B`;
   }
   
-  // If >= 1 million, show in millions
+  // Show in millions
   if (millions >= 1) {
     return `$${Math.round(millions)}M`;
   }
