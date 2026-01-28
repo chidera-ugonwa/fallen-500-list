@@ -121,7 +121,7 @@ const ArticleDetail = () => {
         <article className="max-w-3xl mx-auto">
           <Card>
             <CardContent className="p-8 md:p-12">
-              <h1 className="text-4xl md:text-5xl font-redressed text-foreground mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
                 {article.title}
               </h1>
               
