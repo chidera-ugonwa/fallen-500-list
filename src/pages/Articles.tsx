@@ -137,7 +137,7 @@ const Articles = () => {
                 onClick={() => handleArticleClick(article.id)}
               >
                 <CardHeader>
-                  <CardTitle className="text-2xl font-redressed">
+                  <CardTitle className="text-2xl font-semibold tracking-tight">
                     {article.title}
                   </CardTitle>
                   <CardDescription className="text-base">
