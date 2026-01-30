@@ -3,14 +3,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SubscribeModal from "@/components/SubscribeModal";
+import { calculateReadingTime, getArticleImage } from "@/lib/articleUtils";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface Article {
   id: string;
   title: string;
   subtitle: string;
+  content: string;
   author: string;
   published_date: string;
 }
@@ -63,7 +67,7 @@ const Articles = () => {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select('id, title, subtitle, author, published_date')
+        .select('id, title, subtitle, content, author, published_date')
         .order('published_date', { ascending: false });
 
       if (error) throw error;
@@ -133,23 +137,42 @@ const Articles = () => {
             {articles.map((article) => (
               <Card 
                 key={article.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
                 onClick={() => handleArticleClick(article.id)}
               >
-                <CardHeader>
-                  <CardTitle className="text-2xl font-semibold tracking-tight">
-                    {article.title}
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    {article.subtitle}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>By {article.author}</span>
-                    <span>{new Date(article.published_date).toLocaleDateString()}</span>
+                <div className="md:flex">
+                  <div className="md:w-1/3 md:flex-shrink-0">
+                    <AspectRatio ratio={16 / 9} className="md:h-full">
+                      <img
+                        src={getArticleImage(article.title)}
+                        alt={article.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </AspectRatio>
                   </div>
-                </CardContent>
+                  <div className="flex-1">
+                    <CardHeader>
+                      <CardTitle className="text-2xl font-semibold tracking-tight">
+                        {article.title}
+                      </CardTitle>
+                      <CardDescription className="text-base">
+                        {article.subtitle}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <span>By {article.author}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {calculateReadingTime(article.content)} min read
+                          </span>
+                          <span>{new Date(article.published_date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </div>
+                </div>
               </Card>
             ))}
           </div>
