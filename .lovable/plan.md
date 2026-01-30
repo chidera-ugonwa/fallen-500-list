@@ -1,50 +1,125 @@
 
-# Plan: Fix Bernie Madoff's Incorrect Data
+# Pre-Deployment Checklist Plan
 
 ## Summary
-Bernie Madoff's entry has incorrect values because the AI confused his personal wealth with the $170B in Ponzi scheme victim losses. This needs a direct database correction.
+Before publishing, your "Fallen 500" app needs several polish items and essential features to ensure a professional, secure, and legally compliant launch.
 
-## Root Cause
-When the AI generated his data, it returned:
-- Peak: $0.82B (wrong)
-- Current: -$170.1B (fraud losses to victims, not his debt)
+---
 
-This caused him to falsely rank #1 with $170.92B "wealth lost."
+## Priority 1: Essential / Legal
 
-## Solution
+### 1.1 Add Privacy Policy Page
+Create `/privacy` route with a page explaining:
+- What data you collect (email, payment info)
+- How data is stored (via backend services)
+- Third-party services (Paystack, Google OAuth)
+- User rights regarding their data
 
-### Step 1: Update Bernie Madoff's Record
-Run a SQL migration to correct his values:
+### 1.2 Add Terms of Service Page
+Create `/terms` route covering:
+- Subscription terms and refund policy
+- Content disclaimer (estimates, educational purposes)
+- User account responsibilities
+- Limitation of liability
+
+### 1.3 Add Footer Links
+Update `Footer.tsx` to include links to Privacy Policy and Terms of Service pages.
+
+---
+
+## Priority 2: User Experience
+
+### 2.1 Add Error Boundary Component
+Create a global error boundary to catch JavaScript errors and display a friendly fallback UI instead of crashing the entire app.
+
+### 2.2 Restyle 404 Page
+Update `NotFound.tsx` to match the dark theme with:
+- Background using `bg-background`
+- Proper text colors and fonts
+- Styled "Return to Home" button
+
+### 2.3 Add Loading Skeletons
+Replace plain "Loading..." text with skeleton placeholders in:
+- `Articles.tsx`
+- `Profile.tsx`
+- `FallenList.tsx`
+
+---
+
+## Priority 3: Security
+
+### 3.1 Protect Admin Routes
+Either:
+- Remove `/populate-database` route before deployment, OR
+- Add authentication check to prevent unauthorized access
+
+### 3.2 Implement Proper Account Deletion
+Create a backend function to:
+- Delete user data from `subscriptions` table
+- Delete user data from `profiles` table
+- Delete the auth user account
+
+---
+
+## Priority 4: SEO & Branding
+
+### 4.1 Create Custom OG Image
+Replace the default Lovable OG image with a branded "Fallen 500" image for better social sharing. Update `index.html` meta tags.
+
+### 4.2 Generate Sitemap
+Create a `public/sitemap.xml` with:
+- Home page
+- Articles page
+- Privacy and Terms pages
+- Dynamic billionaire detail pages (optional, can be generated)
+
+---
+
+## Priority 5: Content Polish
+
+### 5.1 Consider Adding Billionaire Images
+Currently 0 of 500 entries have images. Options:
+- Add placeholder images for key entries
+- Use industry-related stock images
+- Leave as-is (images aren't required for functionality)
+
+---
+
+## Implementation Order
 
 ```text
-UPDATE fallen_billionaires 
-SET 
-  peak_net_worth = 17,
-  current_net_worth = 0
-WHERE name ILIKE '%bernie madoff%';
+1. Privacy Policy + Terms of Service (legal requirement)
+2. Update Footer with legal links
+3. Restyle 404 page (quick win)
+4. Add Error Boundary (stability)
+5. Protect/remove populate-database route (security)
+6. Add Loading Skeletons (polish)
+7. Custom OG Image + Sitemap (SEO)
+8. Account deletion function (compliance)
 ```
 
-**Corrected values:**
-- Peak Net Worth: $17B (reported personal fortune before 2008 arrest)
-- Current Net Worth: $0 (died in federal prison in 2021)
-- Wealth Lost: $17B (computed automatically)
+---
 
-### Step 2: Recalculate All Rankings
-Call the ranking function to ensure proper ordering:
+## Files to Create
+- `src/pages/Privacy.tsx` - Privacy policy page
+- `src/pages/Terms.tsx` - Terms of service page
+- `src/components/ErrorBoundary.tsx` - Global error handler
+- `public/sitemap.xml` - Site map for SEO
+- `supabase/functions/delete-account/index.ts` - Account deletion
 
-```text
-SELECT recalculate_rankings();
-```
+## Files to Modify
+- `src/App.tsx` - Add new routes, wrap with ErrorBoundary
+- `src/components/Footer.tsx` - Add legal links
+- `src/pages/NotFound.tsx` - Update styling
+- `src/pages/Articles.tsx` - Add skeleton loading
+- `src/pages/Profile.tsx` - Add skeleton loading
+- `index.html` - Update OG image URL
 
-### Step 3: Verify the Fix
-Query to confirm the update and new ranking.
+---
 
-## Expected Result After Fix
-- Bernie Madoff will display: Peak $17.0B, Current $0
-- His wealth lost will be $17B
-- He will rank appropriately among other fallen billionaires (likely around rank 8-15 based on the current data)
-
-## Technical Notes
-- The `wealth_lost` column is computed automatically (`peak_net_worth - current_net_worth`)
-- The trigger for Title Case normalization will run on update, keeping his name formatted correctly
-- No code changes are needed; this is purely a data correction
+## Optional Enhancements (Post-Launch)
+- Add newsletter signup
+- Social sharing buttons on articles
+- Search engine submission
+- Analytics integration
+- Cookie consent banner (if required by your jurisdiction)
