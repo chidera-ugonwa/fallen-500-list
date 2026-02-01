@@ -1,4 +1,4 @@
-import { TrendingDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 export default function Footer() {
@@ -18,6 +18,23 @@ export default function Footer() {
           </p>
         </div>
 
+        {/* Legal Links */}
+        <div className="mb-6 flex items-center justify-center gap-6">
+          <Link 
+            to="/privacy" 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors font-lato"
+          >
+            Privacy Policy
+          </Link>
+          <span className="text-muted-foreground/50">•</span>
+          <Link 
+            to="/terms" 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors font-lato"
+          >
+            Terms of Service
+          </Link>
+        </div>
+
         {/* Disclaimer */}
         <div className="mb-8">
           <p className="text-xs text-muted-foreground max-w-2xl mx-auto leading-relaxed font-lato">
@@ -30,7 +47,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-border pt-6">
           <p className="text-sm text-muted-foreground font-lato">
-            © 2025 Fallen500. All rights reserved.
+            © {new Date().getFullYear()} Fallen500. All rights reserved.
           </p>
         </div>
       </div>

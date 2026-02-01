@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import SubscribeModal from "@/components/SubscribeModal";
 import { calculateReadingTime, getArticleImage } from "@/lib/articleUtils";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import ArticleCardSkeleton from "@/components/skeletons/ArticleCardSkeleton";
 
 interface Article {
   id: string;
@@ -92,8 +93,22 @@ const Articles = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-20 flex justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-12 text-center">
+              <h1 className="text-4xl md:text-5xl font-redressed text-foreground mb-4">
+                Exclusive <span className="text-destructive">Articles</span>
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                In-depth stories and analysis of the world's fallen billionaires
+              </p>
+            </div>
+            <div className="space-y-6">
+              {[1, 2, 3].map((i) => (
+                <ArticleCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         </div>
         <Footer />
       </div>
