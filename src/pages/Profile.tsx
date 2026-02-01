@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,15 +84,21 @@ const Profile = () => {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      // Note: This would need a backend function to properly delete user data
-      // For now, just sign out
-      await signOut();
+      const { error } = await supabase.functions.invoke('delete-account', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Account Deleted",
         description: "Your account has been deleted successfully.",
       });
       navigate("/");
     } catch (error) {
+      console.error('Delete account error:', error);
       toast({
         title: "Error",
         description: "Failed to delete account. Please try again.",
@@ -180,15 +187,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-20 flex justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-        <Footer />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (

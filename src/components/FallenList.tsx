@@ -4,9 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight, Loader2 } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, TrendingDown, ArrowRight } from "lucide-react";
 import { useFallenBillionaires } from "@/hooks/useFallenBillionaires";
 import { formatPeakWorth, formatCurrentWorth } from "@/lib/formatters";
+import FallenListSkeleton from "@/components/skeletons/FallenListSkeleton";
 
 type SortField = 'rank' | 'name' | 'peak_net_worth' | 'current_net_worth' | 'country' | 'industry';
 type SortDirection = 'asc' | 'desc';
@@ -55,11 +56,7 @@ export default function FallenList() {
   }, [fallenBillionaires, searchQuery, sortField, sortDirection]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <FallenListSkeleton />;
   }
 
   if (error) {
