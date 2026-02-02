@@ -1,125 +1,63 @@
 
-# Pre-Deployment Checklist Plan
+
+# Plan: Fix Google Sign-In for Custom Domain & Payment Considerations
 
 ## Summary
-Before publishing, your "Fallen 500" app needs several polish items and essential features to ensure a professional, secure, and legally compliant launch.
+
+This plan addresses two issues:
+1. **Google Sign-In not working on fallen500.site** - requires adding your custom domain as an allowed redirect URL in the authentication settings
+2. **Dollar card payments** - current Paystack setup works but has limitations for international users
 
 ---
 
-## Priority 1: Essential / Legal
+## Issue 1: Google Sign-In for Custom Domain
 
-### 1.1 Add Privacy Policy Page
-Create `/privacy` route with a page explaining:
-- What data you collect (email, payment info)
-- How data is stored (via backend services)
-- Third-party services (Paystack, Google OAuth)
-- User rights regarding their data
+### The Problem
+Google OAuth uses redirect URLs after authentication. Currently, only the preview URL (`*.lovable.app`) is configured. When users try to sign in from `fallen500.site`, the redirect fails because that domain isn't whitelisted.
 
-### 1.2 Add Terms of Service Page
-Create `/terms` route covering:
-- Subscription terms and refund policy
-- Content disclaimer (estimates, educational purposes)
-- User account responsibilities
-- Limitation of liability
+### Solution (Manual Configuration Required)
+You need to add your custom domain to the authentication settings. This is a configuration change in the backend dashboard, not a code change.
 
-### 1.3 Add Footer Links
-Update `Footer.tsx` to include links to Privacy Policy and Terms of Service pages.
+**Steps to complete:**
+1. Open the backend dashboard (button provided below)
+2. Navigate to **Users** → **Authentication Settings**
+3. Find the **Site URL** section and set it to `https://fallen500.site`
+4. Find the **Redirect URLs** section and add:
+   - `https://fallen500.site`
+   - `https://www.fallen500.site`
+   - `https://fallen500.site/auth`
+   - Keep the existing preview URL as well
+5. Save changes
 
----
-
-## Priority 2: User Experience
-
-### 2.1 Add Error Boundary Component
-Create a global error boundary to catch JavaScript errors and display a friendly fallback UI instead of crashing the entire app.
-
-### 2.2 Restyle 404 Page
-Update `NotFound.tsx` to match the dark theme with:
-- Background using `bg-background`
-- Proper text colors and fonts
-- Styled "Return to Home" button
-
-### 2.3 Add Loading Skeletons
-Replace plain "Loading..." text with skeleton placeholders in:
-- `Articles.tsx`
-- `Profile.tsx`
-- `FallenList.tsx`
+This should enable Google Sign-In to work on your custom domain within a few minutes.
 
 ---
 
-## Priority 3: Security
+## Issue 2: Dollar Card Payments
 
-### 3.1 Protect Admin Routes
-Either:
-- Remove `/populate-database` route before deployment, OR
-- Add authentication check to prevent unauthorized access
+### Current Setup
+Your app currently uses **Paystack** which:
+- Processes payments in Nigerian Naira (NGN at ₦15,000)
+- Displays price as $9.99 USD to users
+- Has limited international card support
 
-### 3.2 Implement Proper Account Deletion
-Create a backend function to:
-- Delete user data from `subscriptions` table
-- Delete user data from `profiles` table
-- Delete the auth user account
+### Paystack's International Card Support
+Paystack does accept some international cards, but there are limitations:
+- Works best with Visa and Mastercard
+- Some international cards may be declined
+- Currency conversion happens on Paystack's side
 
----
+### If You Want Broader International Support (Future Consideration)
+For the widest international card acceptance, you would need to:
+1. Create Stripe edge functions (`stripe-create-checkout` and `stripe-webhook`)
+2. Create a Stripe product and price in Stripe Dashboard
+3. Update the SubscribeModal to use Stripe instead of Paystack
 
-## Priority 4: SEO & Branding
-
-### 4.1 Create Custom OG Image
-Replace the default Lovable OG image with a branded "Fallen 500" image for better social sharing. Update `index.html` meta tags.
-
-### 4.2 Generate Sitemap
-Create a `public/sitemap.xml` with:
-- Home page
-- Articles page
-- Privacy and Terms pages
-- Dynamic billionaire detail pages (optional, can be generated)
+Since you chose to leave payments as-is, no code changes are needed now. If you later want to switch to Stripe for better international support, let me know.
 
 ---
 
-## Priority 5: Content Polish
+## Action Required From You
 
-### 5.1 Consider Adding Billionaire Images
-Currently 0 of 500 entries have images. Options:
-- Add placeholder images for key entries
-- Use industry-related stock images
-- Leave as-is (images aren't required for functionality)
+Open the backend dashboard and configure the redirect URLs for your custom domain:
 
----
-
-## Implementation Order
-
-```text
-1. Privacy Policy + Terms of Service (legal requirement)
-2. Update Footer with legal links
-3. Restyle 404 page (quick win)
-4. Add Error Boundary (stability)
-5. Protect/remove populate-database route (security)
-6. Add Loading Skeletons (polish)
-7. Custom OG Image + Sitemap (SEO)
-8. Account deletion function (compliance)
-```
-
----
-
-## Files to Create
-- `src/pages/Privacy.tsx` - Privacy policy page
-- `src/pages/Terms.tsx` - Terms of service page
-- `src/components/ErrorBoundary.tsx` - Global error handler
-- `public/sitemap.xml` - Site map for SEO
-- `supabase/functions/delete-account/index.ts` - Account deletion
-
-## Files to Modify
-- `src/App.tsx` - Add new routes, wrap with ErrorBoundary
-- `src/components/Footer.tsx` - Add legal links
-- `src/pages/NotFound.tsx` - Update styling
-- `src/pages/Articles.tsx` - Add skeleton loading
-- `src/pages/Profile.tsx` - Add skeleton loading
-- `index.html` - Update OG image URL
-
----
-
-## Optional Enhancements (Post-Launch)
-- Add newsletter signup
-- Social sharing buttons on articles
-- Search engine submission
-- Analytics integration
-- Cookie consent banner (if required by your jurisdiction)
