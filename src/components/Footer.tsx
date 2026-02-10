@@ -21,6 +21,13 @@ export default function Footer() {
         {/* Legal Links */}
         <div className="mb-6 flex items-center justify-center gap-6">
           <Link 
+            to="/pricing" 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors font-lato"
+          >
+            Pricing
+          </Link>
+          <span className="text-muted-foreground/50">•</span>
+          <Link 
             to="/privacy" 
             className="text-sm text-muted-foreground hover:text-foreground transition-colors font-lato"
           >
