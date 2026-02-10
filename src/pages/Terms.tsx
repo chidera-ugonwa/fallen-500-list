@@ -71,7 +71,7 @@ export default function Terms() {
             <ul className="list-disc pl-6 space-y-2">
               <li><strong className="text-foreground">Billing:</strong> Subscriptions are billed on a recurring basis according to your chosen plan.</li>
               <li><strong className="text-foreground">Cancellation:</strong> You may cancel your subscription at any time through your profile settings. Access continues until the end of your current billing period.</li>
-              <li><strong className="text-foreground">Refunds:</strong> Refund requests are handled on a case-by-case basis. Contact us for assistance.</li>
+              <li><strong className="text-foreground">Refunds:</strong> Refunds are provided at the sole discretion of Fallen500 and on a case-by-case basis and may be refused. Fallen500 will refuse a refund request if we find evidence of fraud, refund abuse, or other manipulative behaviour that entitles Fallen500 to counterclaim the refund. This does not affect your rights as a Consumer in relation to Products which are not as described, faulty or not fit for purpose.</li>
               <li><strong className="text-foreground">Price Changes:</strong> We reserve the right to modify subscription prices with reasonable notice.</li>
             </ul>
           </section>
