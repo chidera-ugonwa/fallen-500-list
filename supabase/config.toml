@@ -1,4 +1,4 @@
 project_id = "kyzbzcdkgggxhakwaqmb"
 
-[functions.paystack-webhook]
+[functions.paddle-webhook]
 verify_jwt = false
