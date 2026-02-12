@@ -1,63 +1,89 @@
 
 
-# Plan: Fix Google Sign-In for Custom Domain & Payment Considerations
+# Switch from Paystack to Paddle
 
 ## Summary
+Replace the Paystack payment integration with Paddle. Paddle handles USD pricing natively and accepts international dollar cards, which solves your payment issues.
 
-This plan addresses two issues:
-1. **Google Sign-In not working on fallen500.site** - requires adding your custom domain as an allowed redirect URL in the authentication settings
-2. **Dollar card payments** - current Paystack setup works but has limitations for international users
+## What I'll Need From You
+Before I start coding, I'll securely request these three values:
+1. **Paddle Client-Side Token** (from Paddle Developer Tools > Authentication)
+2. **Paddle Price ID** (e.g., `pri_abc123` -- from your product's price in Paddle dashboard)
+3. **Paddle Webhook Secret** (from Developer Tools > Notifications after setting the webhook URL)
 
----
+Your webhook URL to enter in Paddle's dashboard:
+`https://kyzbzcdkgggxhakwaqmb.supabase.co/functions/v1/paddle-webhook`
 
-## Issue 1: Google Sign-In for Custom Domain
+## Changes
 
-### The Problem
-Google OAuth uses redirect URLs after authentication. Currently, only the preview URL (`*.lovable.app`) is configured. When users try to sign in from `fallen500.site`, the redirect fails because that domain isn't whitelisted.
+### 1. Add Paddle.js script to `index.html`
+Load Paddle's client-side SDK so the checkout overlay can open directly on your site (no redirect needed).
 
-### Solution (Manual Configuration Required)
-You need to add your custom domain to the authentication settings. This is a configuration change in the backend dashboard, not a code change.
+### 2. Rewrite `src/components/SubscribeModal.tsx`
+- Remove Paystack edge function call
+- Initialize Paddle with your Client-Side Token
+- Open Paddle checkout overlay with your Price ID, passing user email and user ID as custom data
+- Handle checkout completion event to show success feedback
 
-**Steps to complete:**
-1. Open the backend dashboard (button provided below)
-2. Navigate to **Users** → **Authentication Settings**
-3. Find the **Site URL** section and set it to `https://fallen500.site`
-4. Find the **Redirect URLs** section and add:
-   - `https://fallen500.site`
-   - `https://www.fallen500.site`
-   - `https://fallen500.site/auth`
-   - Keep the existing preview URL as well
-5. Save changes
+### 3. Update `src/pages/Profile.tsx`
+- Replace `handleSubscribe` to open Paddle checkout instead of calling `paystack-initialize`
+- Keep cancel subscription logic as-is (direct DB update)
 
-This should enable Google Sign-In to work on your custom domain within a few minutes.
+### 4. Update `src/pages/Pricing.tsx`
+- "Get Started" button opens Paddle checkout for logged-in users (or redirects to auth if not signed in)
 
----
+### 5. Create `supabase/functions/paddle-webhook/index.ts`
+- Receives POST events from Paddle
+- Verifies the webhook signature using `PADDLE_WEBHOOK_SECRET`
+- Handles `subscription.activated` -- creates/updates subscription to "active"
+- Handles `subscription.canceled` -- sets subscription to "canceled"
+- Handles `subscription.updated` -- updates period end date
 
-## Issue 2: Dollar Card Payments
+### 6. Delete Paystack edge functions
+- Remove `supabase/functions/paystack-initialize/index.ts`
+- Remove `supabase/functions/paystack-webhook/index.ts`
 
-### Current Setup
-Your app currently uses **Paystack** which:
-- Processes payments in Nigerian Naira (NGN at ₦15,000)
-- Displays price as $9.99 USD to users
-- Has limited international card support
+### 7. Update `supabase/config.toml`
+- Replace `paystack-webhook` with `paddle-webhook` (both need `verify_jwt = false`)
 
-### Paystack's International Card Support
-Paystack does accept some international cards, but there are limitations:
-- Works best with Visa and Mastercard
-- Some international cards may be declined
-- Currency conversion happens on Paystack's side
+### 8. Secret management
+- Add `PADDLE_WEBHOOK_SECRET` as a new secret
+- The `PAYSTACK_SECRET_KEY` secret can remain (harmless) or be cleaned up later
 
-### If You Want Broader International Support (Future Consideration)
-For the widest international card acceptance, you would need to:
-1. Create Stripe edge functions (`stripe-create-checkout` and `stripe-webhook`)
-2. Create a Stripe product and price in Stripe Dashboard
-3. Update the SubscribeModal to use Stripe instead of Paystack
+## How the New Flow Works
 
-Since you chose to leave payments as-is, no code changes are needed now. If you later want to switch to Stripe for better international support, let me know.
+```text
+User clicks "Subscribe"
+        |
+        v
+Paddle.Checkout.open() -- overlay appears on your site
+        |
+        v
+User enters card details (USD, international cards supported)
+        |
+        v
+Paddle processes payment and sends webhook
+        |
+        v
+paddle-webhook edge function verifies signature
+        |
+        v
+Subscription record created/updated in database
+        |
+        v
+User sees active subscription on next page load
+```
 
----
+## Files Modified
+- `index.html` -- add Paddle.js script
+- `src/components/SubscribeModal.tsx` -- Paddle checkout
+- `src/pages/Profile.tsx` -- Paddle checkout
+- `src/pages/Pricing.tsx` -- Paddle checkout
 
-## Action Required From You
+## Files Created
+- `supabase/functions/paddle-webhook/index.ts`
 
-Open the backend dashboard and configure the redirect URLs for your custom domain:
+## Files Deleted
+- `supabase/functions/paystack-initialize/index.ts`
+- `supabase/functions/paystack-webhook/index.ts`
 
