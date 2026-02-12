@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Trash2, Key, CreditCard, FileText, Shield, Calendar, Mail, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { openPaddleCheckout } from "@/lib/paddle";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -139,23 +140,24 @@ const Profile = () => {
     }
   };
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = () => {
+    if (!user) return;
     try {
-      const { data, error } = await supabase.functions.invoke('paystack-initialize', {
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+      openPaddleCheckout({
+        email: user.email || "",
+        userId: user.id,
+        onSuccess: () => {
+          toast({
+            title: "Payment Successful!",
+            description: "Your subscription is being activated.",
+          });
+          fetchSubscription();
         },
       });
-
-      if (error) throw error;
-
-      if (data.authorization_url) {
-        window.location.href = data.authorization_url;
-      }
     } catch (error) {
       toast({
         title: "Payment Error",
-        description: "Failed to initialize payment. Please try again.",
+        description: "Failed to open checkout. Please try again.",
         variant: "destructive",
       });
     }

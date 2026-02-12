@@ -1,11 +1,36 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { openPaddleCheckout } from "@/lib/paddle";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Pricing() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleGetStarted = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    openPaddleCheckout({
+      email: user.email || "",
+      userId: user.id,
+      onSuccess: () => {
+        toast({
+          title: "Payment Successful!",
+          description: "Your subscription is being activated.",
+        });
+        navigate("/profile?payment=success");
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -84,9 +109,9 @@ export default function Pricing() {
                   Cancel anytime
                 </li>
               </ul>
-              <Link to="/auth">
-                <Button className="w-full mt-6">Get Started</Button>
-              </Link>
+              <Button className="w-full mt-6" onClick={handleGetStarted}>
+                Get Started
+              </Button>
             </CardContent>
           </Card>
         </div>
