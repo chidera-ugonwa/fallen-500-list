@@ -1,54 +1,17 @@
 
-
-# Switch from Paystack to Paddle
+# Switch from Paddle to Dodo Payments
 
 ## Summary
-Replace the Paystack payment integration with Paddle. Paddle handles USD pricing natively and accepts international dollar cards, which solves your payment issues.
+Replace the Paddle payment integration with Dodo Payments for subscription management. Dodo uses a server-side checkout session model (similar to Stripe) where your backend creates a checkout URL and redirects the user, rather than an in-page overlay like Paddle.
 
-## What I'll Need From You
-Before I start coding, I'll securely request these three values:
-1. **Paddle Client-Side Token** (from Paddle Developer Tools > Authentication)
-2. **Paddle Price ID** (e.g., `pri_abc123` -- from your product's price in Paddle dashboard)
-3. **Paddle Webhook Secret** (from Developer Tools > Notifications after setting the webhook URL)
+## What You'll Need
+Before implementation, you'll need to provide two secrets from your Dodo Payments dashboard:
+1. **DODO_PAYMENTS_API_KEY** -- your API key (from Developer Settings)
+2. **DODO_WEBHOOK_SECRET** -- your webhook secret key (from Webhook Settings)
 
-Your webhook URL to enter in Paddle's dashboard:
-`https://kyzbzcdkgggxhakwaqmb.supabase.co/functions/v1/paddle-webhook`
-
-## Changes
-
-### 1. Add Paddle.js script to `index.html`
-Load Paddle's client-side SDK so the checkout overlay can open directly on your site (no redirect needed).
-
-### 2. Rewrite `src/components/SubscribeModal.tsx`
-- Remove Paystack edge function call
-- Initialize Paddle with your Client-Side Token
-- Open Paddle checkout overlay with your Price ID, passing user email and user ID as custom data
-- Handle checkout completion event to show success feedback
-
-### 3. Update `src/pages/Profile.tsx`
-- Replace `handleSubscribe` to open Paddle checkout instead of calling `paystack-initialize`
-- Keep cancel subscription logic as-is (direct DB update)
-
-### 4. Update `src/pages/Pricing.tsx`
-- "Get Started" button opens Paddle checkout for logged-in users (or redirects to auth if not signed in)
-
-### 5. Create `supabase/functions/paddle-webhook/index.ts`
-- Receives POST events from Paddle
-- Verifies the webhook signature using `PADDLE_WEBHOOK_SECRET`
-- Handles `subscription.activated` -- creates/updates subscription to "active"
-- Handles `subscription.canceled` -- sets subscription to "canceled"
-- Handles `subscription.updated` -- updates period end date
-
-### 6. Delete Paystack edge functions
-- Remove `supabase/functions/paystack-initialize/index.ts`
-- Remove `supabase/functions/paystack-webhook/index.ts`
-
-### 7. Update `supabase/config.toml`
-- Replace `paystack-webhook` with `paddle-webhook` (both need `verify_jwt = false`)
-
-### 8. Secret management
-- Add `PADDLE_WEBHOOK_SECRET` as a new secret
-- The `PAYSTACK_SECRET_KEY` secret can remain (harmless) or be cleaned up later
+You'll also need to:
+- Create a subscription product in your Dodo dashboard and note the **Product ID** (e.g. `prod_xxxxx`)
+- Set your webhook URL in the Dodo dashboard to: `https://kyzbzcdkgggxhakwaqmb.supabase.co/functions/v1/dodo-webhook`
 
 ## How the New Flow Works
 
@@ -56,34 +19,99 @@ Load Paddle's client-side SDK so the checkout overlay can open directly on your 
 User clicks "Subscribe"
         |
         v
-Paddle.Checkout.open() -- overlay appears on your site
+Frontend calls "create-dodo-checkout" backend function
         |
         v
-User enters card details (USD, international cards supported)
+Backend function calls Dodo API to create a Checkout Session
         |
         v
-Paddle processes payment and sends webhook
+Backend returns checkout_url to frontend
         |
         v
-paddle-webhook edge function verifies signature
+User is redirected to Dodo's hosted checkout page
         |
         v
-Subscription record created/updated in database
+User completes payment on Dodo's page
         |
         v
-User sees active subscription on next page load
+Dodo sends webhook to "dodo-webhook" backend function
+        |
+        v
+Backend verifies webhook signature, updates subscription in DB
+        |
+        v
+User is redirected back to /profile?payment=success
 ```
 
+## Changes
+
+### 1. Remove Paddle.js from `index.html`
+Remove the `<script src="https://cdn.paddle.com/paddle/v2/paddle.js">` tag. Dodo uses server-side checkout sessions, so no client-side SDK is needed.
+
+### 2. Delete `src/lib/paddle.ts`
+This file is no longer needed since Dodo doesn't use a client-side SDK.
+
+### 3. Create `supabase/functions/create-dodo-checkout/index.ts`
+A new backend function that:
+- Authenticates the user via their session token
+- Calls the Dodo Payments REST API (`POST https://api.dodopayments.com/checkouts`) with your product ID
+- Passes the user's email and a `return_url` pointing to `/profile?payment=success`
+- Returns the `checkout_url` for the frontend to redirect to
+
+### 4. Create `supabase/functions/dodo-webhook/index.ts`
+A new backend function that:
+- Receives POST events from Dodo Payments
+- Verifies the webhook signature using `DODO_WEBHOOK_SECRET`
+- Handles these event types:
+  - `subscription.active` -- creates/updates subscription record to "active"
+  - `subscription.renewed` -- updates the billing period
+  - `subscription.on_hold` -- sets status to "on_hold"
+  - `subscription.failed` -- sets status to "failed"
+- Looks up the user by the email from the webhook payload and updates the `subscriptions` table
+
+### 5. Update `src/components/SubscribeModal.tsx`
+- Remove the `openPaddleCheckout` import
+- Instead, call the `create-dodo-checkout` backend function
+- Redirect the user to the returned `checkout_url` (opens in same tab or new tab)
+
+### 6. Update `src/pages/Profile.tsx`
+- Remove `openPaddleCheckout` import and usage
+- The `handleSubscribe` function will call `create-dodo-checkout` and redirect to the checkout URL
+
+### 7. Update `src/pages/Pricing.tsx`
+- Remove `openPaddleCheckout` import
+- "Get Started" button calls `create-dodo-checkout` and redirects to checkout URL
+
+### 8. Delete `supabase/functions/paddle-webhook/index.ts`
+No longer needed.
+
+### 9. Update `supabase/config.toml`
+Replace `paddle-webhook` with `dodo-webhook` (both need `verify_jwt = false`). Also add `create-dodo-checkout` (with JWT verification enabled, the default).
+
+### 10. Secret management
+- Add `DODO_PAYMENTS_API_KEY` as a new secret
+- Add `DODO_WEBHOOK_SECRET` as a new secret
+- Existing `PADDLE_WEBHOOK_SECRET` can remain (harmless) or be cleaned up later
+
+## Key Difference: User Identification
+Paddle allowed passing `custom_data.user_id` directly in the checkout. Dodo's checkout session uses a `customer.email` field. The webhook will need to look up the user by email in the `profiles` table to find the correct `user_id` for updating the subscription. Alternatively, Dodo supports a `metadata` field on checkout sessions that can carry the `user_id`.
+
 ## Files Modified
-- `index.html` -- add Paddle.js script
-- `src/components/SubscribeModal.tsx` -- Paddle checkout
-- `src/pages/Profile.tsx` -- Paddle checkout
-- `src/pages/Pricing.tsx` -- Paddle checkout
+- `index.html` -- remove Paddle.js script
+- `src/components/SubscribeModal.tsx` -- use Dodo checkout
+- `src/pages/Profile.tsx` -- use Dodo checkout
+- `src/pages/Pricing.tsx` -- use Dodo checkout
 
 ## Files Created
-- `supabase/functions/paddle-webhook/index.ts`
+- `supabase/functions/create-dodo-checkout/index.ts`
+- `supabase/functions/dodo-webhook/index.ts`
 
 ## Files Deleted
-- `supabase/functions/paystack-initialize/index.ts`
-- `supabase/functions/paystack-webhook/index.ts`
+- `src/lib/paddle.ts`
+- `supabase/functions/paddle-webhook/index.ts`
 
+## Technical Notes
+- Dodo's API base URL is `https://api.dodopayments.com` for live mode and `https://test.dodopayments.com` for test mode
+- Webhook signature verification uses HMAC-SHA256 (similar to Paddle)
+- The `subscriptions` table schema stays the same -- only `payment_provider` will be set to `'dodo'` instead of `'paddle'`
+- The `cancel-subscription` backend function can remain as-is since it only updates the local DB; for actually canceling on Dodo's side, you'd call their Cancel Subscription API
