@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
-import { openPaddleCheckout } from "@/lib/paddle";
+import { openDodoCheckout } from "@/lib/dodo";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Pricing() {
@@ -13,22 +13,21 @@ export default function Pricing() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
     if (!user) {
       navigate("/auth");
       return;
     }
-    openPaddleCheckout({
-      email: user.email || "",
-      userId: user.id,
-      onSuccess: () => {
-        toast({
-          title: "Payment Successful!",
-          description: "Your subscription is being activated.",
-        });
-        navigate("/profile?payment=success");
-      },
-    });
+    try {
+      const url = await openDodoCheckout();
+      window.location.href = url;
+    } catch (error) {
+      toast({
+        title: "Payment Error",
+        description: "Failed to open checkout. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
