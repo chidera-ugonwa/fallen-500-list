@@ -1,4 +1,16 @@
 project_id = "kyzbzcdkgggxhakwaqmb"
 
-[functions.paddle-webhook]
+[functions.dodo-webhook]
+verify_jwt = false
+
+[functions.create-dodo-checkout]
+verify_jwt = false
+
+[functions.cancel-subscription]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.generate-billionaire-data]
 verify_jwt = false

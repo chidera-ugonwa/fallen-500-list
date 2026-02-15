@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { openPaddleCheckout } from "@/lib/paddle";
+import { openDodoCheckout } from "@/lib/dodo";
 
 interface SubscribeModalProps {
   open: boolean;
@@ -34,22 +34,10 @@ export default function SubscribeModal({ open, onClose }: SubscribeModalProps) {
 
     setLoading(true);
     try {
-      openPaddleCheckout({
-        email: user.email || "",
-        userId: user.id,
-        onSuccess: () => {
-          toast({
-            title: "Payment Successful!",
-            description: "Your subscription is being activated. It may take a moment.",
-          });
-          onClose();
-        },
-        onClose: () => {
-          setLoading(false);
-        },
-      });
+      const url = await openDodoCheckout();
+      window.location.href = url;
     } catch (error) {
-      console.error("Paddle checkout error:", error);
+      console.error("Dodo checkout error:", error);
       toast({
         title: "Payment Error",
         description: "Failed to open checkout. Please try again.",

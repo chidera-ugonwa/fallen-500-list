@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Trash2, Key, CreditCard, FileText, Shield, Calendar, Mail, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { openPaddleCheckout } from "@/lib/paddle";
+import { openDodoCheckout } from "@/lib/dodo";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -140,20 +140,11 @@ const Profile = () => {
     }
   };
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     if (!user) return;
     try {
-      openPaddleCheckout({
-        email: user.email || "",
-        userId: user.id,
-        onSuccess: () => {
-          toast({
-            title: "Payment Successful!",
-            description: "Your subscription is being activated.",
-          });
-          fetchSubscription();
-        },
-      });
+      const url = await openDodoCheckout();
+      window.location.href = url;
     } catch (error) {
       toast({
         title: "Payment Error",
