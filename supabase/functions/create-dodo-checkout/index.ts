@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const DODO_API_URL = 'https://api.dodopayments.com';
+const DODO_API_URL = 'https://live.dodopayments.com';
 const DODO_PRODUCT_ID = 'pdt_0NYa7xOb94FluWMe3eCLw';
 
 Deno.serve(async (req) => {
@@ -40,26 +40,20 @@ Deno.serve(async (req) => {
     const origin = req.headers.get('origin') || 'https://fallen500.com';
 
     // Create Dodo checkout session
-    const response = await fetch(`${DODO_API_URL}/subscriptions`, {
+    const response = await fetch(`${DODO_API_URL}/checkouts`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${DODO_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        billing: {
-          city: "N/A",
-          country: "US",
-          state: "N/A",
-          street: "N/A",
-          zipcode: "00000",
-        },
+        product_cart: [
+          { product_id: DODO_PRODUCT_ID, quantity: 1 }
+        ],
         customer: {
           email: user.email,
           name: user.user_metadata?.name || user.email.split('@')[0],
         },
-        product_id: DODO_PRODUCT_ID,
-        quantity: 1,
         payment_link: true,
         return_url: `${origin}/profile?payment=success`,
         metadata: {
@@ -78,7 +72,7 @@ Deno.serve(async (req) => {
     console.log('Dodo checkout created:', JSON.stringify(data));
 
     return new Response(
-      JSON.stringify({ url: data.payment_link }),
+      JSON.stringify({ url: data.checkout_url }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
