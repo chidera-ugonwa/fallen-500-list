@@ -75,10 +75,10 @@ Deno.serve(async (req) => {
       JSON.stringify({ url: data.checkout_url }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in create-dodo-checkout:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error?.message || 'Unknown error' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
