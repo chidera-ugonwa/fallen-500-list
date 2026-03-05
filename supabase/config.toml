@@ -1,9 +1,9 @@
 project_id = "kyzbzcdkgggxhakwaqmb"
 
-[functions.dodo-webhook]
+[functions.chargebee-webhook]
 verify_jwt = false
 
-[functions.create-dodo-checkout]
+[functions.create-chargebee-checkout]
 verify_jwt = false
 
 [functions.cancel-subscription]

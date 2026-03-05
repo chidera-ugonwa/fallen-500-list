@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
-import { openDodoCheckout } from "@/lib/dodo";
+import { openChargebeeCheckout } from "@/lib/chargebee";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Pricing() {
@@ -19,8 +19,8 @@ export default function Pricing() {
       return;
     }
     try {
-      const url = await openDodoCheckout();
-      window.location.href = url;
+      await openChargebeeCheckout();
+      window.location.href = '/profile?payment=success';
     } catch (error) {
       toast({
         title: "Payment Error",
