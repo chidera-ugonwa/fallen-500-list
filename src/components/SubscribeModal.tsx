@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { openDodoCheckout } from "@/lib/dodo";
+import { openChargebeeCheckout } from "@/lib/chargebee";
 
 interface SubscribeModalProps {
   open: boolean;
@@ -34,15 +34,17 @@ export default function SubscribeModal({ open, onClose }: SubscribeModalProps) {
 
     setLoading(true);
     try {
-      const url = await openDodoCheckout();
-      window.location.href = url;
+      await openChargebeeCheckout();
+      // Checkout completed or closed — reload to check subscription
+      window.location.href = '/profile?payment=success';
     } catch (error) {
-      console.error("Dodo checkout error:", error);
+      console.error("Chargebee checkout error:", error);
       toast({
         title: "Payment Error",
         description: "Failed to open checkout. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };

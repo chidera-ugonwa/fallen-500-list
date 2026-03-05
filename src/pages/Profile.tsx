@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Trash2, Key, CreditCard, FileText, Shield, Calendar, Mail, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { openDodoCheckout } from "@/lib/dodo";
+import { openChargebeeCheckout } from "@/lib/chargebee";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -46,13 +46,11 @@ const Profile = () => {
       return;
     }
 
-    // Check for payment success
     if (searchParams.get('payment') === 'success') {
       toast({
         title: "Payment Successful!",
         description: "Your subscription is now active. Enjoy exclusive articles!",
       });
-      // Remove query param
       navigate('/profile', { replace: true });
     }
 
@@ -143,8 +141,8 @@ const Profile = () => {
   const handleSubscribe = async () => {
     if (!user) return;
     try {
-      const url = await openDodoCheckout();
-      window.location.href = url;
+      await openChargebeeCheckout();
+      window.location.href = '/profile?payment=success';
     } catch (error) {
       toast({
         title: "Payment Error",
@@ -189,7 +187,6 @@ const Profile = () => {
       
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Profile Header Card */}
           <Card>
             <CardHeader>
               <CardTitle className="font-redressed text-3xl">Profile</CardTitle>
@@ -218,7 +215,6 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Account Information Card */}
           <Card>
             <CardHeader>
               <CardTitle className="font-redressed text-2xl flex items-center gap-2">
