@@ -75,7 +75,7 @@ IMPORTANT: Return ONLY the JSON object, no markdown, no explanation.`;
     }
 
     return content;
-  } catch (error) {
+  } catch (error: any) {
     clearTimeout(timeoutId);
     
     if (error.name === "AbortError" || error.message?.includes("network") || error.message?.includes("connection")) {
@@ -109,7 +109,7 @@ serve(async (req) => {
     let content: string;
     try {
       content = await callAI(name, LOVABLE_API_KEY);
-    } catch (error) {
+    } catch (error: any) {
       if (error.message === "RATE_LIMITED") {
         return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
           status: 429,
@@ -158,9 +158,9 @@ serve(async (req) => {
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

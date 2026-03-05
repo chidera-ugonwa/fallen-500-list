@@ -142,12 +142,12 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Unexpected error during account deletion:", error);
     return new Response(
       JSON.stringify({
         error: "An unexpected error occurred",
-        details: error.message,
+        details: error?.message || 'Unknown error',
       }),
       {
         status: 500,
