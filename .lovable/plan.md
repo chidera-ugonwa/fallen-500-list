@@ -1,117 +1,65 @@
 
-# Switch from Paddle to Dodo Payments
 
-## Summary
-Replace the Paddle payment integration with Dodo Payments for subscription management. Dodo uses a server-side checkout session model (similar to Stripe) where your backend creates a checkout URL and redirects the user, rather than an in-page overlay like Paddle.
+## Plan
 
-## What You'll Need
-Before implementation, you'll need to provide two secrets from your Dodo Payments dashboard:
-1. **DODO_PAYMENTS_API_KEY** -- your API key (from Developer Settings)
-2. **DODO_WEBHOOK_SECRET** -- your webhook secret key (from Webhook Settings)
+### 1. Password visibility toggle on Auth page
 
-You'll also need to:
-- Create a subscription product in your Dodo dashboard and note the **Product ID** (e.g. `prod_xxxxx`)
-- Set your webhook URL in the Dodo dashboard to: `https://kyzbzcdkgggxhakwaqmb.supabase.co/functions/v1/dodo-webhook`
+Add an eye/eye-off icon button to each password field in the login and signup forms on `src/pages/Auth.tsx`. Clicking toggles `type` between `"password"` and `"text"`.
 
-## How the New Flow Works
+**Changes:**
+- **`src/pages/Auth.tsx`**: Import `Eye` and `EyeOff` from lucide-react. Add `showPassword` state. Wrap each password `<Input>` in a relative container with an absolute-positioned toggle button. Toggle `type` between `"password"` and `"text"`.
 
-```text
-User clicks "Subscribe"
-        |
-        v
-Frontend calls "create-dodo-checkout" backend function
-        |
-        v
-Backend function calls Dodo API to create a Checkout Session
-        |
-        v
-Backend returns checkout_url to frontend
-        |
-        v
-User is redirected to Dodo's hosted checkout page
-        |
-        v
-User completes payment on Dodo's page
-        |
-        v
-Dodo sends webhook to "dodo-webhook" backend function
-        |
-        v
-Backend verifies webhook signature, updates subscription in DB
-        |
-        v
-User is redirected back to /profile?payment=success
-```
+### 2. Fix build errors (TypeScript `unknown` type on `error`)
 
-## Changes
+All 5 edge functions have `catch (error)` blocks accessing `error.message` without type narrowing.
 
-### 1. Remove Paddle.js from `index.html`
-Remove the `<script src="https://cdn.paddle.com/paddle/v2/paddle.js">` tag. Dodo uses server-side checkout sessions, so no client-side SDK is needed.
+**Changes** (same pattern in each file):
+- **`supabase/functions/cancel-subscription/index.ts`** (line 51): `catch (error)` → `catch (error: any)` or cast with `(error as Error).message`
+- **`supabase/functions/create-dodo-checkout/index.ts`** (line 78): same fix
+- **`supabase/functions/delete-account/index.ts`** (line 145): same fix
+- **`supabase/functions/dodo-webhook/index.ts`** (line 160): same fix
+- **`supabase/functions/generate-billionaire-data/index.ts`** (lines 78, 112, 161): same fix across multiple catch blocks
 
-### 2. Delete `src/lib/paddle.ts`
-This file is no longer needed since Dodo doesn't use a client-side SDK.
+### 3. Chargebee migration plan (draft)
 
-### 3. Create `supabase/functions/create-dodo-checkout/index.ts`
-A new backend function that:
-- Authenticates the user via their session token
-- Calls the Dodo Payments REST API (`POST https://api.dodopayments.com/checkouts`) with your product ID
-- Passes the user's email and a `return_url` pointing to `/profile?payment=success`
-- Returns the `checkout_url` for the frontend to redirect to
+Below is a plan for switching from Dodo Payments to Chargebee for subscription billing.
 
-### 4. Create `supabase/functions/dodo-webhook/index.ts`
-A new backend function that:
-- Receives POST events from Dodo Payments
-- Verifies the webhook signature using `DODO_WEBHOOK_SECRET`
-- Handles these event types:
-  - `subscription.active` -- creates/updates subscription record to "active"
-  - `subscription.renewed` -- updates the billing period
-  - `subscription.on_hold` -- sets status to "on_hold"
-  - `subscription.failed` -- sets status to "failed"
-- Looks up the user by the email from the webhook payload and updates the `subscriptions` table
+#### Overview
 
-### 5. Update `src/components/SubscribeModal.tsx`
-- Remove the `openPaddleCheckout` import
-- Instead, call the `create-dodo-checkout` backend function
-- Redirect the user to the returned `checkout_url` (opens in same tab or new tab)
+Replace the three Dodo-specific edge functions and frontend helper with Chargebee equivalents. The `subscriptions` database table and `useSubscription` hook stay the same -- only the payment provider value and edge function logic change.
 
-### 6. Update `src/pages/Profile.tsx`
-- Remove `openPaddleCheckout` import and usage
-- The `handleSubscribe` function will call `create-dodo-checkout` and redirect to the checkout URL
+#### Steps
 
-### 7. Update `src/pages/Pricing.tsx`
-- Remove `openPaddleCheckout` import
-- "Get Started" button calls `create-dodo-checkout` and redirects to checkout URL
+**A. Obtain Chargebee credentials**
+- Chargebee Site name, API Key, and Publishable Key from the Chargebee dashboard.
+- Create a Plan/Item Price in Chargebee for the $9.99/month subscription. Note the `item_price_id`.
+- Store `CHARGEBEE_API_KEY` and `CHARGEBEE_SITE` as secrets.
 
-### 8. Delete `supabase/functions/paddle-webhook/index.ts`
-No longer needed.
+**B. Create checkout edge function** (`create-chargebee-checkout/index.ts`)
+- Authenticate user (same pattern as current).
+- Call Chargebee's "Create a hosted checkout page" API: `POST https://{site}.chargebee.com/api/v2/hosted_pages/checkout_new_for_items` with the item price ID and customer email.
+- Return the hosted page URL to the frontend.
 
-### 9. Update `supabase/config.toml`
-Replace `paddle-webhook` with `dodo-webhook` (both need `verify_jwt = false`). Also add `create-dodo-checkout` (with JWT verification enabled, the default).
+**C. Create webhook edge function** (`chargebee-webhook/index.ts`)
+- Verify webhook using Chargebee's webhook password or basic auth.
+- Handle events: `subscription_created`, `subscription_activated`, `subscription_renewed`, `subscription_cancelled`, `subscription_paused`, `payment_failed`.
+- Upsert/update the `subscriptions` table with `payment_provider: 'chargebee'` and the Chargebee subscription ID as `payment_reference`.
 
-### 10. Secret management
-- Add `DODO_PAYMENTS_API_KEY` as a new secret
-- Add `DODO_WEBHOOK_SECRET` as a new secret
-- Existing `PADDLE_WEBHOOK_SECRET` can remain (harmless) or be cleaned up later
+**D. Update cancel-subscription edge function**
+- Call Chargebee's cancel subscription API: `POST https://{site}.chargebee.com/api/v2/subscriptions/{id}/cancel_for_items` using the `payment_reference` stored in the DB.
+- Then update the local `subscriptions` row.
 
-## Key Difference: User Identification
-Paddle allowed passing `custom_data.user_id` directly in the checkout. Dodo's checkout session uses a `customer.email` field. The webhook will need to look up the user by email in the `profiles` table to find the correct `user_id` for updating the subscription. Alternatively, Dodo supports a `metadata` field on checkout sessions that can carry the `user_id`.
+**E. Frontend changes**
+- Replace `src/lib/dodo.ts` with `src/lib/chargebee.ts` that invokes `create-chargebee-checkout`.
+- Update imports in `SubscribeModal.tsx` and `Pricing.tsx`.
+- Optionally embed Chargebee.js for in-app checkout instead of redirect.
 
-## Files Modified
-- `index.html` -- remove Paddle.js script
-- `src/components/SubscribeModal.tsx` -- use Dodo checkout
-- `src/pages/Profile.tsx` -- use Dodo checkout
-- `src/pages/Pricing.tsx` -- use Dodo checkout
+**F. Cleanup**
+- Delete `create-dodo-checkout`, `dodo-webhook` edge functions.
+- Remove `DODO_PAYMENTS_API_KEY` and `DODO_WEBHOOK_SECRET` secrets.
+- Update `supabase/config.toml` with new function entries.
 
-## Files Created
-- `supabase/functions/create-dodo-checkout/index.ts`
-- `supabase/functions/dodo-webhook/index.ts`
+**G. Database**
+- No schema changes needed. The `subscriptions` table already has `payment_provider` and `payment_reference` columns.
+- Existing Dodo subscriptions remain in the table; new ones get `payment_provider: 'chargebee'`.
 
-## Files Deleted
-- `src/lib/paddle.ts`
-- `supabase/functions/paddle-webhook/index.ts`
-
-## Technical Notes
-- Dodo's API base URL is `https://api.dodopayments.com` for live mode and `https://test.dodopayments.com` for test mode
-- Webhook signature verification uses HMAC-SHA256 (similar to Paddle)
-- The `subscriptions` table schema stays the same -- only `payment_provider` will be set to `'dodo'` instead of `'paddle'`
-- The `cancel-subscription` backend function can remain as-is since it only updates the local DB; for actually canceling on Dodo's side, you'd call their Cancel Subscription API
