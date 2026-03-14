@@ -12,10 +12,13 @@ Deno.serve(async (req) => {
 
   try {
     const CHARGEBEE_API_KEY = Deno.env.get('CHARGEBEE_API_KEY');
-    const CHARGEBEE_SITE = Deno.env.get('CHARGEBEE_SITE');
-    if (!CHARGEBEE_API_KEY || !CHARGEBEE_SITE) {
+    const CHARGEBEE_SITE_RAW = Deno.env.get('CHARGEBEE_SITE');
+    if (!CHARGEBEE_API_KEY || !CHARGEBEE_SITE_RAW) {
       throw new Error('Chargebee credentials are not configured');
     }
+
+    // Strip any trailing .chargebee.com if accidentally included in the site name
+    const CHARGEBEE_SITE = CHARGEBEE_SITE_RAW.replace(/\.chargebee\.com$/i, '');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
