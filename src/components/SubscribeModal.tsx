@@ -34,9 +34,11 @@ export default function SubscribeModal({ open, onClose }: SubscribeModalProps) {
 
     setLoading(true);
     try {
-      await openChargebeeCheckout();
-      // Checkout completed or closed — reload to check subscription
-      window.location.href = '/profile?payment=success';
+      const result = await openChargebeeCheckout();
+      if (result === 'success') {
+        window.location.href = '/profile?payment=success';
+      }
+      // 'closed' — user dismissed the modal, just reset
     } catch (error) {
       console.error("Chargebee checkout error:", error);
       toast({
