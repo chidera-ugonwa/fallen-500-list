@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const CHARGEBEE_API_KEY = Deno.env.get('CHARGEBEE_API_KEY');
-    const CHARGEBEE_SITE = Deno.env.get('CHARGEBEE_SITE');
+    const CHARGEBEE_SITE = (Deno.env.get('CHARGEBEE_SITE') ?? '').replace(/\.chargebee\.com$/i, '');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
