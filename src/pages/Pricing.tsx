@@ -19,8 +19,10 @@ export default function Pricing() {
       return;
     }
     try {
-      await openChargebeeCheckout();
-      window.location.href = '/profile?payment=success';
+      const result = await openChargebeeCheckout();
+      if (result === 'success') {
+        window.location.href = '/profile?payment=success';
+      }
     } catch (error) {
       toast({
         title: "Payment Error",
