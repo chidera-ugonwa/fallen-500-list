@@ -31,7 +31,9 @@ function ensureChargebeeLoaded(): Promise<void> {
   });
 }
 
-export async function openChargebeeCheckout(): Promise<void> {
+export type CheckoutResult = 'success' | 'closed';
+
+export async function openChargebeeCheckout(): Promise<CheckoutResult> {
   await ensureChargebeeLoaded();
 
   const cbInstance = window.Chargebee!.init({
@@ -54,13 +56,13 @@ export async function openChargebeeCheckout(): Promise<void> {
         return data.hosted_page;
       },
       success: (_hostedPageId: string) => {
-        resolve();
+        resolve('success');
       },
       error: (error: any) => {
         reject(error);
       },
       close: () => {
-        resolve();
+        resolve('closed');
       },
     });
   });
