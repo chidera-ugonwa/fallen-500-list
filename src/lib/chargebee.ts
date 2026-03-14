@@ -15,7 +15,7 @@ declare global {
   }
 }
 
-const CHARGEBEE_SITE = 'Fallen500';
+const CHARGEBEE_SITE = 'fallen500';
 
 function ensureChargebeeLoaded(): Promise<void> {
   return new Promise((resolve, reject) => {
